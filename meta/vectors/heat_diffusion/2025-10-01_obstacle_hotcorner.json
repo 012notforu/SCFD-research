@@ -1,0 +1,17 @@
+{
+  "vector": [
+    0.38,
+    0.92,
+    0.0035,
+    0.06,
+    0.28,
+    2.1,
+    0.18
+  ],
+  "metrics": {
+    "status": "pending",
+    "comment": "Obstacle variant baseline prior to tuning."
+  },
+  "source_run": "runs/heat_obstacle_cma",
+  "notes": "Central obstacle with hot-corner target and control budget."
+}

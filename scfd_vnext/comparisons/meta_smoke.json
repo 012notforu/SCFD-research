@@ -1,0 +1,54 @@
+{
+  "cartpole_scfd_blend": {
+    "vector": "meta\\vectors\\cartpole\\2025-09-29_half.json",
+    "mean_steps": 2500.0
+  },
+  "cartpole_scfd_blend_heavy": {
+    "vector": "meta\\vectors\\cartpole\\2025-09-29_heavy.json",
+    "mean_steps": 1757.3333740234375
+  },
+  "cartpole_scfd_blend_highhorizon": {
+    "vector": "meta\\vectors\\cartpole\\2025-09-29_highhorizon.json",
+    "mean_steps": 2500.0
+  },
+  "flow_cylinder_highinflow": {
+    "vector": "meta\\vectors\\flow_cylinder\\2025-09-30_highinflow.json",
+    "mean_wake_mse": 0.04401613399386406
+  },
+  "flow_cylinder_karman": {
+    "vector": "meta\\vectors\\flow_cylinder\\2025-09-29_large.json",
+    "mean_wake_mse": 0.04401613399386406
+  },
+  "gray_scott_checker": {
+    "vector": "meta\\vectors\\gray_scott\\2025-09-29_checker.json",
+    "mean_mse": 0.005968078505247831
+  },
+  "gray_scott_spots": {
+    "vector": "meta\\vectors\\gray_scott\\2025-09-29_half.json",
+    "mean_mse": 0.0036862788256257772
+  },
+  "gray_scott_stripes": {
+    "vector": "meta\\vectors\\gray_scott\\2025-09-29_stripes.json",
+    "mean_mse": 0.007664649281650782
+  },
+  "heat_diffusion_coolspot": {
+    "vector": "meta\\vectors\\heat_diffusion\\2025-09-29_coolspot.json",
+    "mean_mse": 0.0056201922707259655
+  },
+  "heat_diffusion_gradient": {
+    "vector": "meta\\vectors\\heat_diffusion\\2025-09-29_large.json",
+    "mean_mse": 0.0026250192895531654
+  },
+  "heat_diffusion_hotcorner": {
+    "vector": "meta\\vectors\\heat_diffusion\\2025-09-29_hotcorner.json",
+    "mean_mse": 0.004502189811319113
+  },
+  "wave_field_defocus": {
+    "vector": "meta\\vectors\\wave_field\\2025-09-30_defocus.json",
+    "mean_mse": 0.015570471994578838
+  },
+  "wave_field_focus": {
+    "vector": "meta\\vectors\\wave_field\\2025-09-29_large.json",
+    "mean_mse": 0.015403348952531815
+  }
+}

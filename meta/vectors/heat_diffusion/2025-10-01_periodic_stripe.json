@@ -1,0 +1,22 @@
+{
+  "vector": [
+    0.9939510822,
+    0.9795116186,
+    0.0199999996,
+    0.0632290691,
+    0.0034744765,
+    1.6538993120,
+    0.0500000007
+  ],
+  "metrics": {
+    "mean_mse": 0.0441918559,
+    "std_mse": 2.7288383e-05,
+    "mean_wrap": 0.0001130926,
+    "mean_energy": 0.1328485757,
+    "mean_latency_ms": 1.4038666487,
+    "mean_budget_util": 1.0,
+    "mean_control_norm": 0.1371407956
+  },
+  "source_run": "runs/heat_periodic_cma_stripe",
+  "notes": "CMA tuned on stripe target with dt_jitter=5e-3 and full-budget boundary control."
+}

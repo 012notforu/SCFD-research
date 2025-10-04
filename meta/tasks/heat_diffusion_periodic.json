@@ -1,0 +1,58 @@
+{
+    "task":  "heat_diffusion_periodic",
+    "domain":  "heat_diffusion",
+    "description":  "SCFD controller tuning on a periodic wrap heat diffusion target with control budget and latency logging.",
+    "simulator":  {
+                      "module":  "benchmarks.heat_diffusion_periodic",
+                      "params":  {
+                                     "shape":  [
+                                                   96,
+                                                   96
+                                               ],
+                                     "dt":  0.1,
+                                     "dt_jitter":  0.005,
+                                     "control_budget":  12.0,
+                                     "noise":  0.01
+                                 }
+                  },
+    "target":  {
+                   "kind":  "stripe",
+                   "phase":  0.0,
+                   "generator":  "synthetic_periodic_temperature"
+               },
+    "controller":  {
+                       "type":  "SCFD_boundary_modulation",
+                       "config_fields":  [
+                                             "encode_gain",
+                                             "encode_decay",
+                                             "control_gain",
+                                             "control_clip",
+                                             "smooth_lambda",
+                                             "theta_clip",
+                                             "alpha"
+                                         ]
+                   },
+    "optimizer_run":  {
+                          "script":  "run.train_cma_heat_periodic",
+                          "outdir":  "runs/heat_periodic_cma_stripe",
+                          "generations":  30,
+                          "population":  10,
+                          "elite":  3,
+                          "episodes":  3,
+                          "steps":  1400,
+                          "record_interval":  70,
+                          "base_seed":  0
+                      },
+    "artifacts":  {
+                      "raster":  "runs/heat_periodic_cma_stripe/best_artifact/heat_diffusion_target_vs_actual.png",
+                      "history":  "runs/heat_periodic_cma_stripe/best_artifact/heat_diffusion_history.npz",
+                      "wrap_error":  "runs/heat_periodic_cma_stripe/best_artifact/heat_periodic_wrap_error.png"
+                  },
+    "vector_path":  "meta/vectors/heat_diffusion/2025-10-01_periodic_stripe.json",
+    "benchmark_metrics":  {
+                              "mean_latency_ms":  1.4038666487,
+                              "mean_energy":  0.1328485757,
+                              "mean_mse":  0.0441918559,
+                              "mean_wrap":  0.0001130926
+                          }
+}

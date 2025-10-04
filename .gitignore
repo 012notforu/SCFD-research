@@ -1,0 +1,15 @@
+﻿# Environments and caches
+scfd_vnext/.venv/
+**/__pycache__/
+.pytest_cache/
+
+# Runs and large artifacts
+scfd_vnext/runs/
+**/*.npz
+**/*.png
+**/*.gif
+**/*.mp4
+
+# Local IDE
+.vscode/
+.idea/

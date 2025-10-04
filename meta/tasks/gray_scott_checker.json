@@ -1,0 +1,52 @@
+{
+  "task": "gray_scott_checker",
+  "domain": "reaction_diffusion",
+  "description": "SCFD controller targeting Gray-Scott checkerboard pattern.",
+  "simulator": {
+    "module": "benchmarks.gray_scott",
+    "params": {
+      "shape": [
+        96,
+        96
+      ],
+      "D_u": 0.16,
+      "D_v": 0.08,
+      "dt": 1.0,
+      "noise": 0.02
+    }
+  },
+  "target": {
+    "kind": "checker",
+    "generator": "synthetic_target"
+  },
+  "controller": {
+    "type": "SCFD_field_modulation",
+    "config_fields": [
+      "encode_gain",
+      "encode_decay",
+      "control_gain_feed",
+      "control_gain_kill",
+      "control_clip",
+      "smooth_lambda",
+      "theta_clip",
+      "F",
+      "k"
+    ]
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_gray_scott",
+    "outdir": "runs/gray_scott_cma_checker",
+    "generations": 30,
+    "population": 8,
+    "elite": 2,
+    "episodes": 3,
+    "steps": 1200,
+    "record_interval": 100,
+    "base_seed": 0
+  },
+  "artifacts": {
+    "raster": "runs/gray_scott_cma_checker/best_artifact/gray_scott_target_vs_actual.png",
+    "history": "runs/gray_scott_cma_checker/best_artifact/gray_scott_history.npz"
+  },
+  "vector_path": "meta/vectors/gray_scott/2025-09-29_checker.json"
+}

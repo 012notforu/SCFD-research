@@ -1,0 +1,57 @@
+{
+  "task": "heat_diffusion_anisotropic",
+  "domain": "heat_diffusion",
+  "variant": "anisotropic",
+  "description": "Anisotropic conductivity tensor with rotated stripe target and latency-aware logging.",
+  "simulator": {
+    "module": "benchmarks.heat_diffusion_anisotropic",
+    "params": {
+      "shape": [96, 96],
+      "dt": 0.1,
+      "alpha_major": 0.24,
+      "alpha_minor": 0.08,
+      "orientation": 0.523598776,
+      "noise": 0.01
+    }
+  },
+  "target": {
+    "kind": "tilted",
+    "angle_deg": 22.5,
+    "generator": "synthetic_anisotropic_temperature"
+  },
+  "controller": {
+    "type": "SCFD_boundary_modulation",
+    "config_fields": [
+      "encode_gain",
+      "encode_decay",
+      "control_gain",
+      "control_clip",
+      "smooth_lambda",
+      "theta_clip",
+      "alpha_major",
+      "alpha_minor",
+      "orientation"
+    ],
+    "scfd_cfg": "cfg/defaults.yaml"
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_heat_anisotropic",
+    "outdir": "runs/heat_anisotropic_cma",
+    "generations": 32,
+    "population": 10,
+    "elite": 3,
+    "episodes": 3,
+    "steps": 1500,
+    "record_interval": 75,
+    "base_seed": 0
+  },
+  "artifacts": {
+    "raster": "runs/heat_anisotropic_cma/best_artifact/heat_diffusion_target_vs_actual.png",
+    "history": "runs/heat_anisotropic_cma/best_artifact/heat_diffusion_history.npz",
+    "axes": "runs/heat_anisotropic_cma/best_artifact/heat_anisotropy_axes.png"
+  },
+  "vector_path": "meta/vectors/heat_diffusion/2025-10-01_anisotropic_tilted.json",
+  "benchmark_metrics": {
+    "status": "pending"
+  }
+}

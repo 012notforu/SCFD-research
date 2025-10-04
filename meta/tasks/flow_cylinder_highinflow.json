@@ -1,0 +1,49 @@
+{
+  "task": "flow_cylinder_highinflow",
+  "domain": "flow_control",
+  "description": "SCFD jet controller for cylinder wake at inflow=1.5.",
+  "simulator": {
+    "module": "benchmarks.flow_cylinder",
+    "params": {
+      "shape": [
+        96,
+        96
+      ],
+      "viscosity": 0.02,
+      "dt": 0.05,
+      "inflow": 1.5,
+      "cylinder_radius": 8
+    }
+  },
+  "controller": {
+    "type": "SCFD_boundary_modulation",
+    "config_fields": [
+      "encode_gain",
+      "encode_decay",
+      "control_gain",
+      "control_clip",
+      "smooth_lambda",
+      "theta_clip",
+      "viscosity"
+    ]
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_flow",
+    "outdir": "runs/flow_cylinder_cma_highinflow",
+    "generations": 25,
+    "population": 10,
+    "elite": 3,
+    "episodes": 3,
+    "steps": 1200,
+    "record_interval": 40,
+    "inflow": 1.5,
+    "early_stop_score": -0.0005,
+    "early_stop_count": 5,
+    "base_seed": 0
+  },
+  "artifacts": {
+    "raster": "runs/flow_cylinder_cma_highinflow/best_artifact/flow_cylinder_velocity.png",
+    "history": "runs/flow_cylinder_cma_highinflow/best_artifact/flow_cylinder_history.npz"
+  },
+  "vector_path": "meta/vectors/flow_cylinder/2025-09-30_highinflow.json"
+}

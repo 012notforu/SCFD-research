@@ -1,0 +1,19 @@
+{
+  "vector": [
+    0.4,
+    0.93,
+    0.004,
+    0.05,
+    0.3,
+    2.0,
+    0.24,
+    0.08,
+    0.5235987760
+  ],
+  "metrics": {
+    "status": "pending",
+    "comment": "Placeholder vector prior to anisotropic CMA sweep."
+  },
+  "source_run": "runs/heat_anisotropic_cma",
+  "notes": "Target tilted stripe, orientation 30 deg."
+}

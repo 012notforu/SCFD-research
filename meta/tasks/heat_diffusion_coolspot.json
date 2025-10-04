@@ -1,0 +1,48 @@
+{
+  "task": "heat_diffusion_coolspot",
+  "domain": "heat_diffusion",
+  "description": "SCFD boundary control maintaining a cool spot profile.",
+  "simulator": {
+    "module": "benchmarks.heat_diffusion",
+    "params": {
+      "shape": [
+        96,
+        96
+      ],
+      "dt": 0.1,
+      "noise": 0.01
+    }
+  },
+  "target": {
+    "kind": "cool_spot",
+    "generator": "synthetic_temperature"
+  },
+  "controller": {
+    "type": "SCFD_boundary_modulation",
+    "config_fields": [
+      "encode_gain",
+      "encode_decay",
+      "control_gain",
+      "control_clip",
+      "smooth_lambda",
+      "theta_clip",
+      "alpha"
+    ]
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_heat",
+    "outdir": "runs/heat_diffusion_cma_coolspot",
+    "generations": 30,
+    "population": 8,
+    "elite": 2,
+    "episodes": 3,
+    "steps": 1500,
+    "record_interval": 100,
+    "base_seed": 0
+  },
+  "artifacts": {
+    "raster": "runs/heat_diffusion_cma_coolspot/best_artifact/heat_diffusion_target_vs_actual.png",
+    "history": "runs/heat_diffusion_cma_coolspot/best_artifact/heat_diffusion_history.npz"
+  },
+  "vector_path": "meta/vectors/heat_diffusion/2025-09-29_coolspot.json"
+}

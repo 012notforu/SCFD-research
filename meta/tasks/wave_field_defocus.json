@@ -1,0 +1,52 @@
+{
+  "task": "wave_field_defocus",
+  "domain": "wave_shaping",
+  "description": "SCFD boundary actuation producing a defocused wave pattern.",
+  "simulator": {
+    "module": "benchmarks.wave_field",
+    "params": {
+      "shape": [
+        96,
+        96
+      ],
+      "wave_speed": 1.0,
+      "dt": 0.05,
+      "damping": 0.001
+    }
+  },
+  "target": {
+    "kind": "defocus",
+    "generator": "synthetic_wave_target"
+  },
+  "controller": {
+    "type": "SCFD_boundary_modulation",
+    "config_fields": [
+      "encode_gain",
+      "encode_decay",
+      "control_gain",
+      "control_clip",
+      "smooth_lambda",
+      "theta_clip",
+      "wave_speed"
+    ]
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_wave",
+    "outdir": "runs/wave_field_cma_defocus",
+    "generations": 25,
+    "population": 12,
+    "elite": 3,
+    "episodes": 3,
+    "steps": 1500,
+    "record_interval": 50,
+    "target": "defocus",
+    "early_stop_score": -0.0005,
+    "early_stop_count": 5,
+    "base_seed": 0
+  },
+  "artifacts": {
+    "raster": "runs/wave_field_cma_defocus/best_artifact/wave_field_target_vs_actual.png",
+    "history": "runs/wave_field_cma_defocus/best_artifact/wave_field_history.npz"
+  },
+  "vector_path": "meta/vectors/wave_field/2025-09-30_defocus.json"
+}

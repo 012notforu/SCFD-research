@@ -1,0 +1,52 @@
+{
+  "task": "flow_constriction_slit",
+  "domain": "flow_control",
+  "variant": "constriction",
+  "description": "Channel with central constriction and SCFD actuator rings to sustain throughput.",
+  "simulator": {
+    "module": "benchmarks.flow_constriction",
+    "params": {
+      "shape": [96, 96],
+      "viscosity": 0.02,
+      "dt": 0.05,
+      "inflow": 1.0,
+      "slit_height": 18,
+      "constriction_half_width": 4,
+      "wall_thickness": 3,
+      "target_velocity": 0.9
+    }
+  },
+  "controller": {
+    "type": "SCFD_boundary_modulation",
+    "config_fields": [
+      "encode_gain",
+      "encode_decay",
+      "control_gain",
+      "control_clip",
+      "smooth_lambda",
+      "theta_clip",
+      "viscosity"
+    ],
+    "scfd_cfg": "cfg/defaults.yaml"
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_flow_constriction",
+    "outdir": "runs/flow_constriction_cma",
+    "generations": 28,
+    "population": 10,
+    "elite": 3,
+    "episodes": 3,
+    "steps": 1600,
+    "record_interval": 60,
+    "base_seed": 0
+  },
+  "artifacts": {
+    "raster": "runs/flow_constriction_cma/best_artifact/flow_constriction_velocity.png",
+    "geometry": "runs/flow_constriction_cma/best_artifact/flow_constriction_geometry.png",
+    "history": "runs/flow_constriction_cma/best_artifact/flow_constriction_history.npz"
+  },
+  "vector_path": "meta/vectors/flow_constriction/2025-10-01_slit_channel.json",
+  "benchmark_metrics": {
+    "status": "pending"
+  }
+}

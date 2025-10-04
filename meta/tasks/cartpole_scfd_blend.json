@@ -1,0 +1,30 @@
+{
+  "task": "cartpole_scfd_blend",
+  "domain": "cartpole_control",
+  "description": "SCFD blended linear/ternary controller balancing the cart-pole benchmark for 2500 steps.",
+  "controller": {
+    "module": "benchmarks.scfd_cartpole",
+    "config_fields": [
+      "feature_weights",
+      "policy_bias",
+      "blend_linear_weight",
+      "blend_ternary_weight",
+      "ternary_force_scale",
+      "ternary_smooth_lambda"
+    ]
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_scfd",
+    "outdir": "runs/scfd_cma_half",
+    "generations": 30,
+    "population": 10,
+    "elite": 3,
+    "episodes": 3,
+    "steps": 2500,
+    "base_seed": 0
+  },
+  "artifacts": {
+    "history": "runs/scfd_cma_half/history.csv"
+  },
+  "vector_path": "meta/vectors/cartpole/2025-09-29_half.json"
+}

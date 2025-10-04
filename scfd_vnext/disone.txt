@@ -1,0 +1,179 @@
+Love where you’re going: keep the oscillatory SCFD “intuition engine” intact, and wrap learning *around* it—never inside it. Here’s a crisp, buildable menu of learning layers, from quickest wins to heavier learners, all designed to respect your physics and plug straight into your current repo.
+
+---
+
+# What stays frozen (non-negotiable)
+
+* **Physics loop (engine/)**: variational PDE, leapfrog, CFL guard, heterogeneous ε(x). No nets here. No gates that alter the field.
+* **Observation → features**: read-only taps (ΔE, ΔEdge, ΔCurv, θ, θ̇, x, ẋ, etc.).
+* **Action hygiene**: EMA smoothing, deadzone near upright, |Δu| clamp, saturation at u_max.
+
+Everything “learning” happens in `observe/` (policy) and `run/` (trainer), nudging only policy weights (and, optionally, a few encode/micro-step knobs).
+
+---
+
+# Feature bank (keep it small & meaningful)
+
+Per control step after your micro-burst:
+
+* Physics-derived: `ΔE`, `ΔEdge`, `ΔCurv` (right − left over a vertical split), optional `entropy ΔS`.
+* Raw env: `θ, θ̇, x, ẋ`.
+* Optional memory: last action `u_{t−1}`, last `ΔE`.
+  Concatenate to a fixed **d ≈ 8–12** vector. Standardize online (running mean/std) in the policy wrapper.
+
+---
+
+# A) Zero-training controller: **short-horizon MPC** (quick win)
+
+Use SCFD’s predictive burst to choose the next force—no learning, often balances CartPole outright.
+
+**At each step:**
+
+1. Enumerate `U = {−u0, 0, +u0}` (or 5 evenly spaced).
+2. For each `u ∈ U`: clone field/state, simulate `h` micro-steps holding `u`, accumulate cost
+   `J(u)=∑[λθ θ_k² + λω θ̇_k² + λx x_k² + λΔ (Δu)² + λE (ΔE_k)²]`.
+3. Pick `argmin J(u)` → smooth → clamp → apply.
+
+**Start values:** `u0=7.5`, `h=12–16`, `λθ=1.0, λω=0.1, λx=0.05, λΔ=0.02, λE=0.05`.
+**Where:** `observe/policies/mpc.py` with a pure function `u = mpc_step(obs, scfd_state, params)`.
+
+Use this as a **baseline** and optionally blend with learned policies (below): `u = α·u_MPC + (1−α)·u_learner`.
+
+---
+
+# B) Population search: **reuse your EM GA** for a linear policy + a few SCFD knobs
+
+Apples-to-apples with EM, minimal code.
+
+**Policy form (linear):**
+
+```
+u_raw = wᵀ φ_t,   φ_t ∈ R^d   (features above)
+u = smooth(clamp(u_raw))
+```
+
+**Genome θ (what GA evolves):**
+
+* `w` (d weights + bias)
+* `encode_gain ∈ [0.01, 0.2]`
+* `micro_steps h ∈ {8,12,16,24}`
+* `λ_action_smooth ∈ [0.05, 0.5]`
+* `deadzone thresholds (θ, θ̇)` small ranges
+
+**GA settings:**
+
+* Pop 64–128, top-k elitism (k≈8), uniform crossover, Gaussian mutation (σ tuned per gene).
+* Fitness: episode length (or shaped reward `−θ² − 0.1θ̇² − 0.001x² − 0.0005ẋ² − 0.002Δu²`).
+* Eval per candidate on **3–5 random seeds**, average fitness.
+
+**Where:**
+
+* `observe/policies/linear.py` (apply `w` to φ_t)
+* `run/train_ga_scfd.py` (reuse EM GA machinery; just swap the genome and rollout)
+
+**Why this first:** you already have the GA harness; this will push SCFD beyond the 126-step plateau quickly without inventing new infrastructure.
+
+---
+
+# C) Black-box optimizer: **CMA-ES** (fewer knobs, faster convergence than GA)
+
+If you want a stronger continuous optimizer without setting crossover/mutation rates:
+
+**Same genome θ** as GA. Use CMA-ES with:
+
+* Pop ≈ 16–32, step size σ₀ = 0.2·‖θ‖, rank-μ update, restart if stagnating.
+* The rest identical (multi-seed eval, same fitness).
+
+**Where:** `run/train_cma_scfd.py` (use `cma` Python package or a light ES if you prefer no new deps).
+
+---
+
+# D) Tiny RL (only if you want on-policy learning)
+
+Keep it small; let SCFD do the heavy lifting.
+
+**Policy:** MLP 8→32→1 (tanh), outputs mean action; fixed σ or learned logσ.
+**Algo:** PPO with small batch (e.g., 8 envs × 256 steps), high entropy bonus (0.01–0.05), clip range 0.2, learning rate 3e-4.
+**Reward:** same shaped reward as above; bonus +1 per time step to emphasize survival; small penalty on |Δu|.
+**Safety:** keep action smoothing outside the net; bound raw action with tanh * u_max.
+
+**Where:** `observe/policies/ppo.py`.
+Pros: adapts online; Cons: more moving parts, needs careful tuning.
+
+---
+
+# E) Online regression controller (no RL infra)
+
+A dead-simple “critic-free” learner that works surprisingly well.
+
+**Idea:** fit a linear map from features to action by minimizing
+`Σ (θ_{t+1}^2 + λ θ̇_{t+1}^2 + ρ Δu_t^2)` with ridge regression and a forgetting factor.
+
+* Maintain `w` with recursive least squares (RLS) or OLS on a sliding buffer.
+* Every M steps, update `w`; keep clamps/deadzone on actions.
+* This gives you *continual adaptation* with almost zero overhead.
+
+**Where:** `observe/policies/online_linear.py`.
+
+---
+
+# Blending & scheduling (what I’d actually run)
+
+1. **Phase 1:** Turn on **MPC only** → verify near-perfect balance (it often is on CartPole).
+2. **Phase 2:** **Blend** MPC with a **linear policy** (`α=0.7` MPC) and let **CMA-ES** optimize `w, u0, h, λ`. This keeps it stable while the linear part learns to shoulder more control.
+3. **Phase 3:** Optionally wean off MPC (lower α) once the learned policy reaches high survival, or keep MPC as a fall-back when |θ| grows.
+
+---
+
+# Guardrails (don’t learn your way out of the physics)
+
+* **Budget the micro-steps**: cap total micro-step clones per action (e.g., 3 candidates × 16 steps) to keep latency predictable.
+* **Keep PDE invariants**: log energy drift, `f>γ` fraction; if they spike, **pause learners** and reduce `encode_gain` (physics first).
+* **Generalization**: evaluate on a fixed set of **held-out seeds** (winds, initial θ) every N generations; early stop if fitness gaps grow (overfitting to a seed).
+* **Action hygiene always on**: EMA smoothing, deadzone, |Δu| clamp—you want smooth control.
+
+---
+
+# File-level wiring (so Codex can implement fast)
+
+* `observe/features.py`
+  `φ_t = extract(obs, scfd_fields) -> np.ndarray[d]` (standardize inside)
+* `observe/policies/linear.py`
+  `u = linear_policy(φ_t, θ_policy)`
+* `observe/policies/mpc.py`
+  `u = mpc_step(obs, scfd_state, params)`  # uses clones & micro-rollouts
+* `observe/policies/online_linear.py`
+  `w = update_ridge(buffer)`; `u = wᵀ φ_t`
+* `run/train_ga_scfd.py`
+  wraps rollout(env, policy, θ) → fitness; GA loop reusing EM infra
+* `run/train_cma_scfd.py`
+  same as GA but CMA-ES
+* `run/ablate_mpc_blend.py`
+  test grid of α ∈ [0,1]; plot survival vs α
+
+**Rollout API** (keep consistent across learners):
+
+```python
+def rollout(env_seed, policy, theta, steps=1000) -> dict:
+    # returns {'reward': float, 'steps': int, 'clips': float, 'smooth_pen': float, ...}
+```
+
+---
+
+# Concrete starting hyperparameters
+
+* **MPC:** `u0=7.5`, `h=12`, `α=0.7` if blended; λ’s as above.
+* **Linear + GA/CMA:** `d≈10`; init `w=0`; genome ranges as listed; pop 64; 3 seeds per eval; 200 generations.
+* **Online linear:** buffer 512 steps; ridge λ=1e-2; forgetting 0.98; update every 32 steps.
+* **RL tiny PPO:** horizon 256, 8 envs, γ=0.99, λ_GAE=0.95, entropy 0.02, clip 0.2, lr 3e-4, 4 epochs.
+
+---
+
+## Recommendation (order of attack)
+
+1. **MPC** (Section A) — fast baseline that often solves CartPole immediately with your SCFD look-ahead.
+2. **Linear + CMA-ES** (Section C) — adds adaptation with minimal complexity; keep MPC blended early.
+3. **Optional**: switch to GA if you want continuity with EM, or try **online linear** for continual adaptation.
+4. **Only if needed**: tiny **PPO** for on-policy learning.
+
+This gives you adaptive, data-driven control **without ever compromising SCFD’s physics**—your intuition engine keeps humming, the learner just learns how to *listen to it better*.
