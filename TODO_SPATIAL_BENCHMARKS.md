@@ -50,8 +50,33 @@ This tracker lives at the root so we can coordinate new SCFD benchmarks. We only
 - [x] Serialize best parameter vector(s) plus metadata.
 - [x] Update meta-training loader to sample the new task.
 - [x] Validate cross-task adaptation run includes the new task.
-\n## Variant Benchmarks\n- [x] Cart-pole: high-horizon (steps 4000).\n- [x] Cart-pole: heavy pole parameters.\n- [x] Gray-Scott: stripes target.\n- [x] Gray-Scott: checker target.\n- [x] Heat diffusion: hot corner target.\n- [x] Heat diffusion: cool spot target.\n- [x] Flow control: high-inflow variant.\n- [x] Wave field: defocus target.\n
-\n## Extended 2D Coverage\n- [x] Heat: periodic boundary conditions benchmark (vector logged, CMA tuned).\n- [~] Heat: anisotropic diffusion tensor variant (controllers scaffolded).\n- [~] Heat: obstacle + hot corner with control budget (sim + CMA stubs ready).\n- [~] Flow: channel with constriction/slit (new geometry + trainer in repo).\n- [ ] Flow: regime sweep (subcritical / critical / supercritical).\n- [ ] Wave: standing mode cavity target.\n- [ ] Wave: partial sensors + action delay variant.\n- [ ] Gray-Scott: near-Turing threshold / bifurcation hover.\n- [ ] Mobile actuator demo (e.g., moveable heater).\n- [ ] Heat inverse problem (hidden source localization).\n- [ ] Flow: redundant body-force actuators with budget.\n- [ ] Wave: mode switch mid-run (focus?standing).\n- [ ] Robustness battery (disturbances / adversary) per domain.\n- [ ] ARC-style diffusion transform (rotate/reflect motif).\n- [ ] Routing & sorting of multiple blobs without collision.\n- [ ] Front tracking / curvature-bounded propagation.\n- [ ] Parameter ID tasks (diffusivity map, viscosity jump).\n- [ ] Latency profiling & budget tagging for each vector.\n
 
+## Variant Benchmarks
+- [x] Cart-pole: high-horizon (steps 4000).
+- [x] Cart-pole: heavy pole parameters.
+- [x] Gray-Scott: stripes target.
+- [x] Gray-Scott: checker target.
+- [x] Heat diffusion: hot corner target.
+- [x] Heat diffusion: cool spot target.
+- [x] Flow control: high-inflow variant.
+- [x] Wave field: defocus target.
 
-
+## Extended 2D Coverage
+- [x] Heat: periodic boundary conditions benchmark (vector logged, CMA tuned).
+- [~] Heat: anisotropic diffusion tensor variant (controllers scaffolded).
+- [~] Heat: obstacle + hot corner with control budget (sim + CMA stubs ready).
+- [~] Flow: channel with constriction/slit (new geometry + trainer in repo).
+- [ ] Flow: regime sweep (subcritical / critical / supercritical).
+- [ ] Wave: standing mode cavity target.
+- [ ] Wave: partial sensors + action delay variant.
+- [ ] Gray-Scott: near-Turing threshold / bifurcation hover.
+- [ ] Mobile actuator demo (e.g., moveable heater).
+- [ ] Heat inverse problem (hidden source localization).
+- [ ] Flow: redundant body-force actuators with budget.
+- [ ] Wave: mode switch mid-run (focus?standing).
+- [ ] Robustness battery (disturbances / adversary) per domain.
+- [ ] ARC-style diffusion transform (rotate/reflect motif).
+- [ ] Routing & sorting of multiple blobs without collision.
+- [ ] Front tracking / curvature-bounded propagation.
+- [ ] Parameter ID tasks (diffusivity map, viscosity jump).
+- [ ] Latency profiling & budget tagging for each vector.
