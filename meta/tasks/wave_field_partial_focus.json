@@ -1,0 +1,49 @@
+﻿{
+  "task": "wave_field_partial_focus",
+  "domain": "wave_shaping",
+  "variant": "partial",
+  "description": "Wave focus target with 20% sensor coverage and 3-step action delay.",
+  "simulator": {
+    "module": "benchmarks.wave_field_partial",
+    "params": {
+      "shape": [96, 96],
+      "wave_speed": 1.0,
+      "dt": 0.05,
+      "damping": 0.001,
+      "sensor_fraction": 0.2,
+      "action_delay": 3,
+      "init_seed": 0
+    }
+  },
+  "target": {
+    "kind": "focus",
+    "generator": "synthetic_wave_target"
+  },
+  "controller": {
+    "type": "SCFD_boundary_modulation",
+    "config_fields": [
+      "encode_gain",
+      "encode_decay",
+      "control_gain",
+      "control_clip",
+      "smooth_lambda",
+      "theta_clip"
+    ],
+    "scfd_cfg": "cfg/defaults.yaml"
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_wave_partial",
+    "outdir": "runs/wave_partial_cma",
+    "generations": 30,
+    "population": 10,
+    "elite": 3,
+    "episodes": 3,
+    "steps": 1400,
+    "record_interval": 50,
+    "sensor_fraction": 0.2,
+    "action_delay": 3,
+    "target": "focus",
+    "base_seed": 0
+  },
+  "vector_path": "meta/vectors/wave_field/2025-10-04_partial_focus.json"
+}

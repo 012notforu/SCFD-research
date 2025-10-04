@@ -1,0 +1,43 @@
+﻿{
+  "task": "flow_regime_sweep",
+  "domain": "flow_control",
+  "variant": "regime_sweep",
+  "description": "Cylinder wake control across multiple inflow regimes using shared SCFD controller.",
+  "simulator": {
+    "module": "benchmarks.flow_regime_sweep",
+    "params": {
+      "shape": [96, 96],
+      "viscosity": 0.02,
+      "dt": 0.05,
+      "inflow_values": [0.6, 1.0, 1.4],
+      "steps_per_regime": 800,
+      "record_interval": 40
+    }
+  },
+  "controller": {
+    "type": "SCFD_boundary_modulation",
+    "config_fields": [
+      "encode_gain",
+      "encode_decay",
+      "control_gain",
+      "control_clip",
+      "smooth_lambda",
+      "theta_clip",
+      "viscosity"
+    ],
+    "scfd_cfg": "cfg/defaults.yaml"
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_flow_regime",
+    "outdir": "runs/flow_regime_cma",
+    "generations": 30,
+    "population": 10,
+    "elite": 3,
+    "episodes": 3,
+    "steps": 800,
+    "record_interval": 40,
+    "inflows": [0.6, 1.0, 1.4],
+    "base_seed": 0
+  },
+  "vector_path": "meta/vectors/flow_regime/2025-10-04_multi.json"
+}

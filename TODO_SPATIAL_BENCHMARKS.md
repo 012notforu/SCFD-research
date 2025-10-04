@@ -1,4 +1,4 @@
-# Spatial Control Benchmark To-Do
+﻿# Spatial Control Benchmark To-Do
 
 This tracker lives at the root so we can coordinate new SCFD benchmarks. We only check a box after:
 1. Implementation lands in the repo.
@@ -66,9 +66,9 @@ This tracker lives at the root so we can coordinate new SCFD benchmarks. We only
 - [~] Heat: anisotropic diffusion tensor variant (controllers scaffolded).
 - [~] Heat: obstacle + hot corner with control budget (sim + CMA stubs ready).
 - [~] Flow: channel with constriction/slit (new geometry + trainer in repo).
-- [ ] Flow: regime sweep (subcritical / critical / supercritical).
-- [ ] Wave: standing mode cavity target.
-- [ ] Wave: partial sensors + action delay variant.
+- [~] Flow: regime sweep (subcritical / critical / supercritical) (vector logged; multi-inflow CMA complete).
+- [~] Wave: standing mode cavity target (m=2, n=3 vector logged; smoke pending).
+- [~] Wave: partial sensors + action delay variant (20% coverage / delay-3 vector logged).
 - [ ] Gray-Scott: near-Turing threshold / bifurcation hover.
 - [ ] Mobile actuator demo (e.g., moveable heater).
 - [ ] Heat inverse problem (hidden source localization).
@@ -80,3 +80,4 @@ This tracker lives at the root so we can coordinate new SCFD benchmarks. We only
 - [ ] Front tracking / curvature-bounded propagation.
 - [ ] Parameter ID tasks (diffusivity map, viscosity jump).
 - [ ] Latency profiling & budget tagging for each vector.
+

@@ -1,0 +1,45 @@
+﻿{
+  "task": "wave_field_cavity_mode23",
+  "domain": "wave_shaping",
+  "variant": "cavity",
+  "description": "Standing-mode cavity target (m=2, n=3) with SCFD boundary modulation.",
+  "simulator": {
+    "module": "benchmarks.wave_field_cavity",
+    "params": {
+      "shape": [96, 96],
+      "wave_speed": 1.0,
+      "dt": 0.05,
+      "damping": 0.001,
+      "mode_m": 2,
+      "mode_n": 3,
+      "init_seed": 0
+    }
+  },
+  "controller": {
+    "type": "SCFD_boundary_modulation",
+    "config_fields": [
+      "encode_gain",
+      "encode_decay",
+      "control_gain",
+      "control_clip",
+      "smooth_lambda",
+      "theta_clip",
+      "damping"
+    ],
+    "scfd_cfg": "cfg/defaults.yaml"
+  },
+  "optimizer_run": {
+    "script": "run.train_cma_wave_cavity",
+    "outdir": "runs/wave_cavity_cma",
+    "generations": 30,
+    "population": 10,
+    "elite": 3,
+    "episodes": 3,
+    "steps": 1400,
+    "record_interval": 50,
+    "mode_m": 2,
+    "mode_n": 3,
+    "base_seed": 0
+  },
+  "vector_path": "meta/vectors/wave_field/2025-10-04_cavity_m2n3.json"
+}

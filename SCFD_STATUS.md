@@ -62,6 +62,11 @@ Below are the tuned controller vectors currently archived in `meta/vectors/` tog
   - Run: `runs/flow_cylinder_cma_highinflow`
   - Mean wake MSE: 1.517e-01 (std 0.0e+00)
   - Task descriptor: `meta/tasks/flow_cylinder_highinflow.json`
+- **Regime sweep vector:** `meta/vectors/flow_regime/2025-10-04_multi.json`
+  - Run: `runs/flow_regime_cma`
+  - Mean wake MSE: 3.638e-02 (std 3.2e-02)
+  - Regime wake MSEs: 0.6: 3.914e-03, 1.0: 2.542e-02, 1.4: 7.981e-02
+  - Task descriptor: `meta/tasks/flow_regime_sweep.json`
 - **Constriction slit (pending):** `meta/vectors/flow_constriction/2025-10-01_slit_channel.json`
   - Run: `runs/flow_constriction_cma`
   - Status: placeholder vector; CMA sweep still pending
@@ -77,6 +82,16 @@ Below are the tuned controller vectors currently archived in `meta/vectors/` tog
   - Run: `runs/wave_field_cma_defocus`
   - Mean MSE: 1.537e-02 (std 6.8e-05)
   - Task descriptor: `meta/tasks/wave_field_defocus.json`
+- **Standing cavity vector:** `meta/vectors/wave_field/2025-10-04_cavity_m2n3.json`
+  - Run: `runs/wave_cavity_cma`
+  - Mean MSE: 5.669e-02 (std 3.9e-05)
+  - Standing mode m=2, n=3
+  - Task descriptor: `meta/tasks/wave_field_cavity_mode23.json`
+- **Partial sensors vector:** `meta/vectors/wave_field/2025-10-04_partial_focus.json`
+  - Run: `runs/wave_partial_cma`
+  - Mean MSE: 1.404e-02 (std 4.0e-05)
+  - Sensor coverage 0.20; action delay 3
+  - Task descriptor: `meta/tasks/wave_field_partial_focus.json`
 
 ### Meta-Learning Snapshot
 

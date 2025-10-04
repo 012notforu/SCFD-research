@@ -1,0 +1,20 @@
+﻿{
+  "vector": [
+    0.9097678413,
+    1.0847778268,
+    -0.3194666919,
+    -0.1366833458,
+    0.9535637607,
+    2.9724864896
+  ],
+  "metrics": {
+    "mean_mse": 0.0140443863,
+    "std_mse": 3.9530580e-05,
+    "mean_sensed_mse": 0.0026706641,
+    "mean_energy": 0.1253008097,
+    "sensor_coverage": 0.20,
+    "action_delay": 3
+  },
+  "source_run": "runs/wave_partial_cma",
+  "notes": "Partial sensing (20% coverage) with 3-step action delay on focus target."
+}

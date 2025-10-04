@@ -1,0 +1,23 @@
+﻿{
+  "vector": [
+    0.4878775235,
+    1.1558675526,
+    0.0435030740,
+    -0.0858748108,
+    0.0695686679,
+    1.8855685436,
+    0.0750487804
+  ],
+  "metrics": {
+    "mean_wake_mse": 0.0363815017,
+    "std_wake_mse": 0.0319390409,
+    "mean_drag_proxy": 0.0,
+    "per_regime": [
+      {"inflow": 0.6, "wake_mse": 0.0039138994, "drag_proxy": 0.0, "energy": 0.0698890015},
+      {"inflow": 1.0, "wake_mse": 0.0254207365, "drag_proxy": 0.0, "energy": 0.0725085065},
+      {"inflow": 1.4, "wake_mse": 0.0798098743, "drag_proxy": 0.0, "energy": 0.0758128986}
+    ]
+  },
+  "source_run": "runs/flow_regime_cma",
+  "notes": "CMA tuned across inflows 0.6, 1.0, 1.4 for multi-regime robustness."
+}

@@ -1,0 +1,19 @@
+﻿{
+  "vector": [
+    1.0495661115,
+    0.7894240088,
+    0.0038385187,
+    0.1168539160,
+    1.0145741269,
+    1.9493017554,
+    0.0193308968
+  ],
+  "metrics": {
+    "mean_mse": 0.0566896982,
+    "std_mse": 3.9191265e-05,
+    "mean_boundary_energy": 0.0,
+    "mean_energy": 0.2861715555
+  },
+  "source_run": "runs/wave_cavity_cma",
+  "notes": "Standing mode target with m=2, n=3; maintains low boundary energy while reducing cavity MSE."
+}
