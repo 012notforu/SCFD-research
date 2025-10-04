@@ -1,4 +1,4 @@
-# SCFD Benchmark Status (As of 2025-09-30)
+﻿# SCFD Benchmark Status (As of 2025-09-30)
 
 Below are the tuned controller vectors currently archived in `meta/vectors/` together with the most recent smoke-test metrics (averaged over seeds 0,1,2 unless stated otherwise).
 
@@ -51,6 +51,16 @@ Below are the tuned controller vectors currently archived in `meta/vectors/` tog
   - mean MSE 4.419e-02; std 2.7e-05; wrap MSE 1.131e-04; latency 1.40 ms
   - Budget utilisation 1.00; control norm 0.137
   - Task descriptor: `meta/tasks/heat_diffusion_periodic.json`
+- **Anisotropic tensor vector:** `meta/vectors/heat_diffusion/2025-10-01_anisotropic_tilted.json`
+  - Run: `runs/heat_anisotropic_cma`
+  - mean MSE 8.713e-03; std 5.1e-05
+  - Principal ratio 5.29
+  - Task descriptor: `meta/tasks/heat_diffusion_anisotropic.json`
+- **Obstacle hot corner vector:** `meta/vectors/heat_diffusion/2025-10-01_obstacle_hotcorner.json`
+  - Run: `runs/heat_obstacle_cma`
+  - mean MSE 2.030e-02; std 3.2e-05
+  - Corner MSE 6.895e-02
+  - Task descriptor: `meta/tasks/heat_diffusion_obstacle.json`
 
 ## Flow Control (Cylinder Jets)
 
@@ -67,9 +77,9 @@ Below are the tuned controller vectors currently archived in `meta/vectors/` tog
   - Mean wake MSE: 3.638e-02 (std 3.2e-02)
   - Regime wake MSEs: 0.6: 3.914e-03, 1.0: 2.542e-02, 1.4: 7.981e-02
   - Task descriptor: `meta/tasks/flow_regime_sweep.json`
-- **Constriction slit (pending):** `meta/vectors/flow_constriction/2025-10-01_slit_channel.json`
+- **Constriction slit vector:** `meta/vectors/flow_constriction/2025-10-01_slit_channel.json`
   - Run: `runs/flow_constriction_cma`
-  - Status: placeholder vector; CMA sweep still pending
+  - Throughput: 0.539; backflow: 0.000
   - Task descriptor: `meta/tasks/flow_constriction.json`
 
 ## Wave-Field Shaping
@@ -99,8 +109,4 @@ Below are the tuned controller vectors currently archived in `meta/vectors/` tog
 - `scripts/meta_smoke.py` verifies each vector (baseline seeds 0,1,2).
 - Latest smoke metrics: see `comparisons/meta_smoke_latest.json`.
 
-## Pending 2D Extensions
-
-- **Heat anisotropic:** `meta/vectors/heat_diffusion/2025-10-01_anisotropic_tilted.json` - scaffolding + tests landed; optimisation pending.
-- **Heat obstacle:** `meta/vectors/heat_diffusion/2025-10-01_obstacle_hotcorner.json` - obstacle geometry + budget logging ready for tuning.
-- **Flow constriction:** `meta/vectors/flow_constriction/2025-10-01_slit_channel.json` - channel slit geometry + CMA script staged.
+## Pending 2D Extensions\n\n- **Gray-Scott near-Turing hover:** planned multi-parameter sweep to stabilise bifurcation edge.\n- **Mobile actuator demo:** moveable heater/actuator benchmark with shifting control point.\n- **Heat inverse problem:** hidden source localisation tasks for diffusion.\n- **Flow redundant actuators:** body-force budget with multiple actuators.\n- **Wave mode switch:** focus→standing transition mid-run with delay compensation.\n

@@ -1,19 +1,21 @@
-{
+﻿{
   "vector": [
-    0.4,
-    0.93,
-    0.004,
-    0.05,
-    0.3,
-    2.0,
-    0.24,
-    0.08,
-    0.5235987760
+    0.9876921569,
+    0.5662383829,
+    0.0033645596,
+    0.1025691317,
+    0.0581321031,
+    2.7262989006,
+    0.0529228145,
+    0.0006201327,
+    0.0447263949
   ],
   "metrics": {
-    "status": "pending",
-    "comment": "Placeholder vector prior to anisotropic CMA sweep."
+    "mean_mse": 0.0087129399,
+    "std_mse": 5.1127983e-05,
+    "mean_energy": 0.2912672162,
+    "mean_principal_ratio": 5.2922816277
   },
   "source_run": "runs/heat_anisotropic_cma",
-  "notes": "Target tilted stripe, orientation 30 deg."
+  "notes": "Anisotropic tensor with tilted stripe target; orientation ~2.56 rad, strong principal axis ratio."
 }

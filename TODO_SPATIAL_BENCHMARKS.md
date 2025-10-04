@@ -66,7 +66,7 @@ This tracker lives at the root so we can coordinate new SCFD benchmarks. We only
 - [~] Heat: anisotropic diffusion tensor variant (controllers scaffolded).
 - [~] Heat: obstacle + hot corner with control budget (sim + CMA stubs ready).
 - [~] Flow: channel with constriction/slit (new geometry + trainer in repo).
-- [~] Flow: regime sweep (subcritical / critical / supercritical) (vector logged; multi-inflow CMA complete).
+- [x] Flow: regime sweep (subcritical / critical / supercritical).
 - [~] Wave: standing mode cavity target (m=2, n=3 vector logged; smoke pending).
 - [~] Wave: partial sensors + action delay variant (20% coverage / delay-3 vector logged).
 - [ ] Gray-Scott: near-Turing threshold / bifurcation hover.
@@ -80,4 +80,5 @@ This tracker lives at the root so we can coordinate new SCFD benchmarks. We only
 - [ ] Front tracking / curvature-bounded propagation.
 - [ ] Parameter ID tasks (diffusivity map, viscosity jump).
 - [ ] Latency profiling & budget tagging for each vector.
+
 

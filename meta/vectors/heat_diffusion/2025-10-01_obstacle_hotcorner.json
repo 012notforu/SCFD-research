@@ -1,17 +1,19 @@
-{
+﻿{
   "vector": [
-    0.38,
-    0.92,
-    0.0035,
-    0.06,
-    0.28,
-    2.1,
-    0.18
+    0.01213192,
+    0.7016458670,
+    0.0889944167,
+    0.0324907592,
+    0.6936067305,
+    1.7843590059,
+    -0.0585427278
   ],
   "metrics": {
-    "status": "pending",
-    "comment": "Obstacle variant baseline prior to tuning."
+    "mean_mse": 0.0202965513,
+    "std_mse": 3.2181470e-05,
+    "mean_corner_mse": 0.0689488947,
+    "mean_energy": 0.2086803317
   },
   "source_run": "runs/heat_obstacle_cma",
-  "notes": "Central obstacle with hot-corner target and control budget."
+  "notes": "Central obstacle with budget=6.0, hot-corner target; corner error tracked for coverage."
 }
