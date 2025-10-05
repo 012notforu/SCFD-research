@@ -1,0 +1,93 @@
+Here’s a tight, faithful “last-mile” plan that plugs what’s missing and snaps the whole stack to ARC/ARC-like spatial benchmarks—without drifting from your SCFD math or update rules.
+
+# Guardrails: keep it SCFD-true
+
+Lock these invariants across every new benchmark and the ARC adapter:
+
+* Symbols live on a grid; updates are **purely local** and pass the **entropy gate** before energy descent (coherence + Laplacian roughness). Synchronous sweeps are allowed even if global E(t) isn’t strictly monotone; that’s consistent with your paper. 
+* Energy = α(1−C)^2 + δ(ΔC)^2, with C from an 8-neighbor stencil and ΔC a 4-neighbor Laplacian, exactly as documented; do not “simplify” to majority rules. 
+* If you engage the hybrid/sparse path or AI-guided adaptation, use the same occupancy thresholding, buffer-zone sparse kernels, and parameter-update cadence you defined—don’t invent new control logic. 
+
+# Finish the open 2-D coverage (fast wins first)
+
+You’ve shipped a lot; here’s how to land the remaining bullets from your tracker using the *same* runner/metrics patterns you already logged.
+
+1. Gray-Scott: near-Turing threshold / bifurcation hover
+   Add a “hover” policy that dials α, δ (and Gray-Scott feed/kill if in coupled-field mode) to keep the correlation-to-target within a band while keeping |ΔC| bounded. Archive two vectors: one that tracks just below bifurcation and one just above, both with ~60–120s stability windows. Tag: `reaction_gray_scott_bifurc`. 
+
+2. Mobile actuator demo (moveable heater)
+   Introduce a single hotspot actuator whose position is a control variable over time. Reward = RMSE to a moving target blob along a scripted path; penalty = total heater “on” time. Store: path, latency, final vector. Tag: `diffusion_mobile_act`. 
+
+3. Heat inverse problem (hidden source localization)
+   Freeze SCFD; run a controller that proposes a source map S while the forward diffusion is simulated. Reward is negative residual between observed field and simulated field. Save the best S and the parameter vector that produced it. Tag: `diffusion_inverse_source`. 
+
+4. Flow: redundant body-force actuators with budget
+   Extend the cylinder/ channel trainer: multiple jets with a total action budget; reward = drag reduction – λ·(actuation_cost). Store budget-satisfying vectors at 3 budgets (low/med/high). Tag: `flow_multi_act_budget`. 
+
+5. Wave: mode switch mid-run (focus→standing)
+   Two-phase reward: first converge to a focal spot, then switch target to a (m,n) standing mode after T_switch; penalize leftover energy at boundaries. Save pre-switch and post-switch vectors and the switch schedule. Tag: `wave_modeswitch`. 
+
+6. Robustness battery (disturbances/adversary)
+   Wrap each domain with a noise/latency/disturbance ablation (e.g., sensor dropout 20%, action delay 3—pattern you already used for waves). Log robustness deltas next to baseline vector. Tag per domain (e.g., `flow_karman_robust`). 
+
+7. ARC-style diffusion transform (rotate/reflect motif)
+   Teach rotation/reflection via *fields*, not pixel ops: run a sequence of local flows (shear + diffusion pulses) that rotate a motif by 90° while preserving symbol boundaries (curvature penalty high during edges). Track IoU between output and canonical rotated target. Tag: `arc_rotate90_diffusion`. 
+
+8. Routing & sorting of multiple blobs (no collision)
+   Targets are K colored sinks; reward = sum of matched IoUs − collision penalties (overlap between different colors). Save vectors for K∈{2,3}. Tag: `routing_multiblob`. 
+
+9. Front tracking / curvature-bounded propagation
+   Initialize a single front and require mean curvature ≤ κ_max; reward penalizes |ΔC| spikes while maximizing arrival coverage. Tag: `front_curv_bound`. 
+
+10. Parameter ID (diffusivity map, viscosity jump)
+    Like the inverse heat task, but estimate piecewise-constant parameters (two-phase medium). Reward = forward–observation residual + sparsity on number of jumps. Tag: `param_id_diffusion`, `param_id_flow`. 
+
+11. Latency profiling & budget tags
+    Run each vector under 3 latency profiles (0, 1, 3-step delays) and stamp `latency_ms` and `steps_per_sec` into the descriptor JSON—this will matter for ARC runtime constraints later. 
+
+# ARC adapter: make SCFD solve grid puzzles “honestly”
+
+Think of ARC tasks as tiny, symbolic physics: local transformations that map input → output on a small grid. The adapter should *only* use SCFD-legal moves but choose vectors/schedules that realize ARC families.
+
+Minimal interface (one module, no drift):
+
+* `arc_task -> scfd_problem`:
+  Map colors→symbols; place the input grid as the initial SCFD state; set boundary conditions to periodic (default) unless the task implies walls. Use your existing task descriptor JSON and meta-loader. 
+* `policy class`:
+  A schedule over (α, δ, gating ε, actuator positions if any) with piecewise-constant phases; optionally plug the **AI-guided** α/δ predictor you specified (interval τ), but keep the predictor bounded to paper limits. 
+* `halt`:
+  Stop when IoU with target ≥ τ or when energy plateau + flip-rate < θ + step cap—exactly the halting blend you’ve used. Log E(t), mean C(t), mean |ΔC|(t).
+
+ARC family → SCFD primitive (starter pack):
+
+* **Symmetry & reflection**: staged “flow-then-freeze” pulses that advect blobs to mirrored positions; curvature penalty prevents smearing.
+* **Rotation/translation**: micro-shear + diffusion cycles (as in the rotate-90 task above).
+* **Counting/replication**: seed fronts that copy count into stripe multiplicity; limit via entropy gate to avoid overgrowth.
+* **Connectivity fill**: raise α briefly to fuse components, then increase δ to clean edges; finish with short ε tightening to stop.
+* **Color remap based on neighborhood**: implement as a short high-ε “no-flip” phase followed by a targeted flip of one symbol class with a per-class acceptance mask (still local; mask derived from neighborhood statistics exported inside the step).
+  All of these stay inside the SCFD update rules; you’re choosing schedules, not inventing new operators.
+
+Training/selection loop (faithful & fast):
+
+* For each ARC task, search over a **small library of schedule templates** (3–6 phases) and over your **existing vector bank** (flow/wave/heat/GS). Pick the best by target IoU. When a new vector generalizes to ≥N tasks in a family, promote it to the corpus for meta-learning and tag it `arc_family_X`. 
+
+# Meta-learning wiring (already scaffolded—use it)
+
+* For each new benchmark or ARC family, write a compact **task descriptor JSON** (physics, reward, seeds, latency) and **serialize the learned vector(s)** with hashes for reproducibility; you already have this checklist—apply it to ARC tasks as first-class citizens. 
+* If you enable the hybrid AI controller, respect your **feature spec** (local physics encoder + global structure encoder, fused to predict bounded α, δ every τ steps). Keep it off by default; turn on only for families that benefit. 
+
+# Tests & logging (catch drift early)
+
+* Unit tests: (1) entropy cap genuinely caps flips per neighborhood, (2) ΔC stencil is 4-neighbor and sign-correct, (3) synchronous apply stage. 
+* Invariants per run: monotone **best IoU so far**, bounded total accepted flips after plateau, no symbol outside Σ, and latency tags present.
+* Export the enhanced pathway logs when using hybrid mode (coherence, curvature, entropy per site, plus interaction stats); they’re already defined—reuse them. 
+
+# Minimal “what to add” checklist you can knock out in order
+
+1. Implement `arc_adapter.py` with: grid/color mapping, schedule templates, halting, IoU metric.
+2. Land the four most cross-cutting missing demos first: **rotate-90 diffusion**, **routing multiblob**, **mobile actuator**, **inverse heat**—these directly map to ARC families and strengthen the library. 
+3. Stamp latency & robustness tags for all vectors (0/1/3 delay). 
+4. Add ARC tasks to the **meta-loader** so adaptation runs can sample them alongside fluids/diffusion. 
+5. Only then, optionally enable the **AI-guided α/δ** loop for ARC families that need long-range coordination—but keep bounds and cadence as in the hybrid doc. 
+
+If you want, I can draft `arc_adapter.py` with the schedule templates and the halting logic wired to your existing runner so you can drop it in and start logging vectors immediately.

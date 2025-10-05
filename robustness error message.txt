@@ -1,0 +1,110 @@
+PS C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext> pytest tests/test_robustness_battery.py
+..F                                                                   [100%]
+================================= FAILURES =================================
+__________________ test_wave_mode_switch_robustness_smoke __________________
+
+    def test_wave_mode_switch_robustness_smoke() -> None:
+>       result = evaluate_wave_mode_switch(
+            steps=620,
+            record_interval=200,
+            seed=11,
+            noise_scale=0.01,
+            switch_delay=0,
+        )
+
+tests\test_robustness_battery.py:45:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+run\robustness_battery.py:272: in evaluate_wave_mode_switch
+    baseline_run = _run_scenario(sim_factory, steps, record_interval, baseline_hook, int(base_rng.integers(0, 2**32)))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+sim_factory = <function evaluate_wave_mode_switch.<locals>.sim_factory at 0x000001E9D9494CC0>
+steps = 620, record_interval = 200
+hook = <function evaluate_wave_mode_switch.<locals>.baseline_hook at 0x000001E9D9495080>
+rng_seed = 574671950
+
+    def _run_scenario(
+        sim_factory: Callable[[], object],
+        steps: int,
+        record_interval: int,
+        hook: Callable[[object, Dict[str, float], int, np.random.Generator], None],
+        rng_seed: int,
+    ) -> Dict[str, object]:
+        rng = np.random.default_rng(rng_seed)
+        simulator = sim_factory()
+        metrics: List[Dict[str, float]] = []
+        final_stats: Dict[str, float] | None = None
+        for step in range(steps):
+            stats = simulator.step()
+            hook(simulator, stats, step, rng)
+>           final_stats = {key: float(value) for key, value in stats.items()}
+                                ^^^^^^^^^^^^
+E           ValueError: could not convert string to float: 'initial'
+
+run\robustness_battery.py:48: ValueError
+============================= warnings summary =============================
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\benchmarks\flow_redundant.py:91: RuntimeWarning: overflow encountered in multiply
+    adv_u = self.u * du_dx + self.v * du_dy
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\benchmarks\flow_redundant.py:91: RuntimeWarning: invalid value encountered in add
+    adv_u = self.u * du_dx + self.v * du_dy
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\benchmarks\flow_redundant.py:92: RuntimeWarning: overflow encountered in multiply
+    adv_v = self.u * dv_dx + self.v * dv_dy
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\benchmarks\flow_redundant.py:92: RuntimeWarning: invalid value encountered in add
+    adv_v = self.u * dv_dx + self.v * dv_dy
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\AppData\Local\Programs\Python\Python313\Lib\site-packages\numpy\_core\_methods.py:135: RuntimeWarning: invalid value encountered in reduce
+    ret = umr_sum(arr, axis, dtype, out, keepdims, where=where)
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\engine\ops.py:36: RuntimeWarning: invalid value encountered in subtract
+    lap_x = (np.roll(field, -1, axis=0) - 2.0 * field + np.roll(field, 1, axis=0)) / (hx ** 2)
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\engine\ops.py:36: RuntimeWarning: invalid value encountered in add
+    lap_x = (np.roll(field, -1, axis=0) - 2.0 * field + np.roll(field, 1, axis=0)) / (hx ** 2)
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\engine\ops.py:37: RuntimeWarning: invalid value encountered in subtract
+    lap_y = (np.roll(field, -1, axis=1) - 2.0 * field + np.roll(field, 1, axis=1)) / (hy ** 2)
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\engine\ops.py:37: RuntimeWarning: invalid value encountered in add
+    lap_y = (np.roll(field, -1, axis=1) - 2.0 * field + np.roll(field, 1, axis=1)) / (hy ** 2)
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\engine\ops.py:38: RuntimeWarning: invalid value encountered in add
+    return lap_x + lap_y
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\benchmarks\flow_redundant.py:81: RuntimeWarning: invalid value encountered in subtract
+    fx = (np.roll(field, -1, axis=1) - np.roll(field, 1, axis=1)) * 0.5
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\benchmarks\flow_cylinder.py:58: RuntimeWarning: invalid value encountered in add
+    acc += np.roll(field, shift=shift, axis=(0, 1))
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\benchmarks\flow_redundant.py:114: RuntimeWarning: invalid value encountered in subtract
+    self.u += dt * (nu * lap_u - adv_u) + delta_field
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\benchmarks\flow_redundant.py:115: RuntimeWarning: invalid value encountered in subtract
+    self.v += dt * (nu * lap_v - adv_v)
+
+tests/test_robustness_battery.py::test_flow_redundant_robustness_smoke
+  C:\Users\mattt\Documents\012loop\looptronics\scfd_vnext\benchmarks\flow_redundant.py:82: RuntimeWarning: invalid value encountered in subtract
+    fy = (np.roll(field, -1, axis=0) - np.roll(field, 1, axis=0)) * 0.5
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========================= short test summary info ==========================
+FAILED tests/test_robustness_battery.py::test_wave_mode_switch_robustness_smoke - ValueError: could not convert string to float: 'initial'
+1 failed, 2 passed, 15 warnings in 5.50s

@@ -1,0 +1,28 @@
+# Virtual environments
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Tooling
+.mypy_cache/
+.pytest_cache/
+ruff_cache/
+.ipynb_checkpoints/
+
+# Runtime outputs
+runs/
+logs/
+*.log
+
+# OS cruft
+.DS_Store
+Thumbs.db
+.coverage

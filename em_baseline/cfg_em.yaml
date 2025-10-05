@@ -1,0 +1,19 @@
+# Default configuration for EM baseline comparisons
+
+em:
+  grid_shape: [64, 64]
+  steps: 256
+  kernel_radius: 5
+  kernel_sigma: 1.5
+  activation: tanh
+  stochastic_prob: 0.02
+  halting:
+    threshold: 0.95
+    max_steps: 256
+    stochastic_p: 0.01
+
+optimizer:
+  population: 16
+  elite: 4
+  mutation_scale: 0.1
+  generations: 10
