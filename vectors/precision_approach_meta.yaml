@@ -1,0 +1,57 @@
+meta_info:
+  description: "Precision navigation vector extracted from successful maze-solving patterns at goal distance=2. Combines field dynamics that showed progress_made=1.0 in close-range navigation."
+  domain: "navigation"
+  pattern_source: "multi_agent_maze logs from position [13,13] with goal_distance=2"
+  extraction_date: "2025-10-06"
+  physics_context:
+    optimal_coherence: 0.11  # Low coherence worked best for precision moves
+    optimal_curvature_range: [-7.3, -3.7]  # Negative curvature indicates field gradients
+    optimal_energy_density: [0.21, 0.41]  # Medium to high energy for final approach
+    gradient_magnitude: [1.4, 1.7]  # Moderate gradients for precision
+    neighbor_pattern:
+      mean_field: 0.57  # Positive field bias toward goal
+      std_dev: [0.99, 1.28]  # Medium field variation
+      valid_neighbors: 3  # Junction or corridor with options
+      nearby_agents: 0  # Works best with solo precision navigation
+
+physics:
+  lambda_val: 0.5
+  gamma_val: 2.0
+  phi_val: 0.3
+  psi_val: 0.1
+  alpha_val: 0.2
+  beta_val: 0.05
+
+initial_conditions:
+  initialization_type: "gradient_focused"
+  gradient_strength: 0.8
+  precision_factor: 2.0  # Higher precision for final approach
+  field_amplification: 1.5  # Amplify existing field patterns
+
+evolved_dynamics:
+  # Extracted from successful gray_scott_cma_checker + heat_inverse_cma pattern
+  primary_mechanism: "precision_gradient_following"
+  field_response:
+    low_coherence_boost: 0.15  # When coherence < 0.2, boost precision
+    negative_curvature_amplify: 1.3  # Amplify negative curvature gradients
+    energy_density_threshold: 0.2  # Activate when energy density > 0.2
+  
+  # From scfd_cma_quick success pattern  
+  quick_convergence:
+    enable_when: "progress_made > 0.5"  # Accelerate when making progress
+    convergence_rate: 2.5
+    field_sharpening: 1.8  # Sharpen field gradients for precision
+  
+  # Meta-learning adaptation
+  adaptive_response:
+    goal_proximity_factor: 5.0  # Stronger effect when close to target
+    neighbor_influence: 0.7  # Moderate influence from neighboring cells
+    backtrack_penalty: -0.3  # Discourage excessive backtracking
+
+specialized_activation:
+  patterns: ["final_approach", "precision_navigation", "goal_proximity"]
+  distance_threshold: 5  # Activate when within 5 cells of target
+  field_conditions:
+    require_positive_bias: true  # Need positive field gradient toward goal
+    min_valid_neighbors: 2  # Need at least 2 movement options
+  coordination_mode: "solo_precision"  # Works best without nearby agents
