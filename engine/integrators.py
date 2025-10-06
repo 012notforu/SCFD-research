@@ -20,6 +20,28 @@ def leapfrog_step(
     rng: Optional[np.random.Generator] = None,
     max_step: Optional[float] = None,
 ) -> tuple[Array, Array, Array, dict]:
+    """
+    Symplectic leapfrog integrator:
+      v_{t+1/2} = v_t + dt/2 * a(u_t)
+      u_{t+1}   = u_t + dt * v_{t+1/2}  
+      v_{t+1}   = v_{t+1/2} + dt/2 * a(u_{t+1})
+    
+    Conserves symplectic structure with small bounded energy drift expected.
+    See tests/test_symplectic_energy.py for energy conservation validation.
+    
+    Args:
+        state: Current position/field values
+        velocity: Current velocity/momentum  
+        accel_fn: Function computing acceleration from state
+        dt: Time step size
+        accel_args: Additional arguments for acceleration function
+        noise_cfg: Optional noise configuration for stochastic dynamics
+        rng: Random number generator for noise
+        max_step: Optional step size clamping for stability
+        
+    Returns:
+        (new_state, new_velocity, acceleration, info_dict)
+    """
     accel_args = accel_args or ()
     acc0 = accel_fn(state, *accel_args)
     v_half = velocity + 0.5 * dt * acc0

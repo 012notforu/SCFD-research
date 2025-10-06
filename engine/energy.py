@@ -17,6 +17,17 @@ def kinetic_energy_density(theta_dot: Array, physics: PhysicsParams) -> Array:
 
 
 def coherence_energy_density(theta: Array, physics: PhysicsParams, dx: float | tuple[float, float] | None = None) -> Array:
+    """
+    E_coherence(theta) = alpha * (||∇theta||^2 + epsilon^2)^(-p/2)
+    
+    Inverse-gradient penalty that penalizes flat spectra and nudges the system 
+    toward near-critical behavior with rich spatial structure.
+    
+    Notes:
+      - Uses central differences with appropriate boundary conditions
+      - Add 'epsilon' for numerical stability near zero gradients  
+      - Refer to README Mathematical Overview: "SCFD Coherence Energy"
+    """
     grad_sq = norm_sq_grad(theta, dx=dx)
     q = grad_sq + physics.epsilon ** 2
     p = float(max(physics.coherence_p, 1))
@@ -91,6 +102,26 @@ def compute_total_energy(
     C_dot: Array | None = None,
     K_dot: Array | None = None,
 ) -> float:
+    """
+    Compute total system energy as spatial average of energy density.
+    
+    H_total = ⟨kinetic + coherence + gradient + potential + curvature⟩
+    
+    Used for energy conservation validation in symplectic integration.
+    The leapfrog integrator should maintain this quantity within small 
+    numerical bounds over time.
+    
+    Args:
+        theta: Primary field variable
+        theta_dot: Time derivative of field
+        physics: Physics parameters defining energy components
+        dx: Spatial discretization for gradient calculations
+        C, K: Optional auxiliary field components
+        C_dot, K_dot: Time derivatives of auxiliary fields
+        
+    Returns:
+        Scalar total energy averaged over spatial domain
+    """
     density = total_energy_density(
         theta,
         theta_dot,

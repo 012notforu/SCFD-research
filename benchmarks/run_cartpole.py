@@ -132,6 +132,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scfd-gain-ang-vel", type=float, default=None)
     parser.add_argument("--scfd-seed", type=int, default=None, help="Seed for SCFD controller rollouts")
     parser.add_argument("--viz", choices=["none", "em", "scfd", "both"], default="none")
+    parser.add_argument("--deterministic", action="store_true", help="freeze non-essential RNG")
     parser.add_argument("--video-format", choices=["auto", "mp4", "gif"], default="auto", help="Format for cart-pole visualization output")
     parser.add_argument("--viz-steps", type=int, default=800)
     parser.add_argument("--outdir", default="cartpole_outputs")
@@ -140,6 +141,14 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    
+    # Set deterministic behavior if requested
+    if args.deterministic:
+        import random
+        seed = getattr(args, 'scfd_seed', 42) or 42
+        random.seed(seed)
+        np.random.seed(seed)
+    
     out_dir = Path(args.outdir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
