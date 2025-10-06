@@ -32,9 +32,9 @@ Each benchmark has a CMA-ES driver (see `run/train_cma_*.py`). Example (heat rou
 python -m run.train_cma_heat_routing   --generations 30 --population 10 --elite 3   --steps 1200 --record-interval 120 --outdir runs/heat_routing_cma
 ```
 Outputs:
-- `runs/<tag>/best_vector.json` ? controller vector + rich metadata.
-- `runs/<tag>/history.csv` ? optimisation trace.
-- `runs/<tag>/best_artifact/` ? metrics array and visualisations.
+- `runs/<tag>/best_vector.json`: controller vector + rich metadata.
+- `runs/<tag>/history.csv`: optimisation trace.
+- `runs/<tag>/best_artifact/`: metrics array and visualisations.
 
 ## 5. Replaying Controllers
 Use the paired `run/run_*.py` scripts:
@@ -80,5 +80,9 @@ print(plan.summary())
 - Include tests for new benchmarks (`tests/test_*`).
 - Use metadata helpers when persisting vectors.
 
-Questions? Open an issue or email licensing@looptronics.ai.
+Questions? Open an issue or email 012notforu@pm.me.
 
+
+## 11. SCFD Cart-pole Demo
+- Use `python -m benchmarks.run_cartpole --controller scfd --viz scfd --viz-steps 1600 --steps 20000 --episodes 5 --scfd-seed 7 --video-format gif --outdir cartpole_outputs` to regenerate media.
+- Copy the updated files from `cartpole_outputs/scfd/` into `cartpole_demo/scfd/` when refreshing repository assets.

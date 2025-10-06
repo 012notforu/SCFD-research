@@ -47,7 +47,8 @@ def run_scfd(args: argparse.Namespace) -> Tuple[Dict[str, float], SCFDCartPoleCo
     cfg.gain_energy = args.scfd_gain_energy
     cfg.gain_angle = args.scfd_gain_angle
     cfg.gain_ang_vel = args.scfd_gain_ang_vel
-    controller = SCFDCartPoleController(cfg)
+    rng = np.random.default_rng(args.scfd_seed) if args.scfd_seed is not None else None
+    controller = SCFDCartPoleController(cfg, rng=rng)
     results = []
     start = time.perf_counter()
     for _ in range(args.episodes):
@@ -84,7 +85,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scfd-gain-energy", type=float, default=4.0)
     parser.add_argument("--scfd-gain-angle", type=float, default=6.0)
     parser.add_argument("--scfd-gain-ang-vel", type=float, default=2.0)
+    parser.add_argument("--scfd-seed", type=int, default=None, help="Seed for SCFD controller rollouts")
     parser.add_argument("--viz", choices=["none", "em", "scfd", "both"], default="none")
+    parser.add_argument("--video-format", choices=["auto", "mp4", "gif"], default="auto", help="Format for cart-pole visualization output")
     parser.add_argument("--viz-steps", type=int, default=800)
     parser.add_argument("--outdir", default="cartpole_outputs")
     return parser.parse_args()
@@ -118,7 +121,7 @@ def main() -> None:
 
     if args.viz in ("scfd", "both") and scfd_controller is not None:
         viz_dir = out_dir / "scfd"
-        result = scfd_controller.generate_visualization(steps=args.viz_steps, out_dir=viz_dir)
+        result = scfd_controller.generate_visualization(steps=args.viz_steps, out_dir=viz_dir, video_format=args.video_format)
         print("SCFD visualization outputs:")
         for k, v in result.items():
             print(f"  {k}: {v}")

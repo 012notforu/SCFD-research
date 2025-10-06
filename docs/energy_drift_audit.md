@@ -20,7 +20,7 @@ This document enumerates every code path and configuration item that can influen
 ## 2. Simulation Setup (`run/common.py`)
 - `load_simulation_config` wraps `engine.params.load_config`, so any YAML edits flow directly into `PhysicsParams`, `IntegrationParams`, etc.
 - `initialize_state` seeds the run:
-  - `theta` initialised from `rng.normal(scale=0.05, size=grid.shape)` ? large amplitude noise kicks off big potential energy.
+  - `theta` initialised from `rng.normal(scale=0.05, size=grid.shape)` - large amplitude noise kicks off big potential energy.
   - `theta_dot` zeros.
   - `heterogeneity` = random frozen field returned by `HeterogeneityConfig.generate_field` and stored alongside the state (although not used inside `run/main_conservative.py`).
 - `setup_logger` uses `utils.logging.create_run_directory` so energy CSVs can be audited post-run.
@@ -37,24 +37,24 @@ This document enumerates every code path and configuration item that can influen
 
 ### 4.1 `engine/pde_core.py`
 - `grad`, `laplace`, `bilaplacian`, and `_div` implement centered finite differences with periodic boundaries via `np.roll`. Error or scaling issues here affect both the PDE and the computed energies (because energy also uses `grad`).
-- `hessian_action`: computes $(??)^T H(?) (??)$ using finite differences. The algebra is sensitive; mis-scaling could inject energy. It assumes uniform `dx` and uses 4-point stencil for mixed partial.
+- `hessian_action`: computes `grad(delta)^T H(delta) grad(delta)` using finite differences. The algebra is sensitive; mis-scaling could inject energy. It assumes uniform `dx` and uses a four-point stencil for mixed partial derivatives.
 - `accel_theta` constructs the full PDE:
-  - Computes `q = |??|^2 + e^2` then `f = a p q^{-m}` where `m = (p+2)/2`. This matches the stated coherence energy derivative. The `coherence_extras` term is $2a p m q^{-(m+1)} hessian_action`.
-  - Core term: `(? - f) * lap` — note the sign; if `f` overwhelms `?` we can get negative diffusion or blow-up.
-  - Subtracts `potential.derivative(?)` and optional curvature penalty (`-2d ?4 ?`).
+  - Computes `q = |grad(theta)|^2 + epsilon^2` then `f = a * p * q^{-m}` where `m = (p + 2) / 2`. This matches the stated coherence energy derivative. The `coherence_extras` term is `2 * a * p * m * q^{-(m + 1)} * hessian_action`.
+  - Core term: `(theta - f) * lap` - note the sign; if `f` overwhelms `theta` we can get negative diffusion or blow-up.
+  - Subtracts `potential.derivative(theta)` and optional curvature penalty (`-2 * d * laplacian^2(theta)`).
   - Divides by `ß` at the end.
 - `accel_CK` handles cross-gradient coupling but is currently disabled in the config. Still good to note signs: returns `-d_c / ß`, etc.
 
 ### 4.2 `engine/params.PotentialConfig`
 - `derivative`:
-  - `double_well`: `2 * stiffness * (?-?0)(?-?1)(2? - ?0 - ?1)`.
-  - `quadratic`: `2 * stiffness * (? - center)`.
+  - `double_well`: `2 * stiffness * (phi - phi0) * (phi - phi1) * (2 * phi - phi0 - phi1)`.
+  - `quadratic`: `2 * stiffness * (phi - center)`.
 - `energy` uses matching formulas: quartic for double-well, quadratic for harmonic.
 - Any mismatch between derivative and energy terms directly breaks conservation.
 
 ### 4.3 `engine/energy.py`
-- `kinetic_energy_density` = `0.5 ß ??²` — uses same `ß` as PDE.
-- `coherence_energy_density`: `a q^{1 - m}` with `q = |??|² + e²` and `m = coherence_exponent`. Needs to align with derivative used in `accel_theta`. If exponent should be `m-1` or similar, misalignment shows up as drift.
+- `kinetic_energy_density` = `0.5 * rho * |theta_dot|^2` - uses the same mass density `rho` as the PDE.
+- `coherence_energy_density`: `a * q^{1 - m}` with `q = |grad(theta)|^2 + epsilon^2` and `m = coherence_exponent`. Needs to align with the derivative used in `accel_theta`. If the exponent should be `m - 1` or similar, any mismatch shows up as drift.
 - `potential_energy_density` defers to `PotentialConfig.energy`.
 - `total_energy_density` sums kinetic + coherence + potential (+ cross term). `compute_total_energy` averages over the grid.
 
@@ -63,7 +63,7 @@ This document enumerates every code path and configuration item that can influen
 
 ## 5. Time Integrator (`engine/integrators.py`)
 - `leapfrog_step` implements velocity-Verlet with symmetric half-steps.
-  - `acc0 = accel_fn(state)` — uses current ?.
+  - `acc0 = accel_fn(state)` - uses the current theta field.
   - `v_half = v + 0.5 dt acc0`.
   - Optional noise injection (off in current tests).
   - `delta = dt * v_half` then optional clipping by `max_step` (currently 0.1). If `dt` is tiny and `max_step` large, this clamp isn’t active.
@@ -84,7 +84,7 @@ This document enumerates every code path and configuration item that can influen
 
 ## 9. Known Factors to Revisit
 - **Coherence term alignment**: `coherence_energy_density` uses exponent `1 - m`; verify against the derivation used in `accel_theta` where the derivative involves `q^{-m}` and `q^{-(m+1)}`.
-- **Potential derivative vs energy**: for the quadratic case, the derivative is `2k(? - c)` but energy is `k(? - c)^2`. Consistent, but double-check scaling vs. `ß` in kinetic term.
+- **Potential derivative vs energy**: for the quadratic case, the derivative is `2 * k * (phi - c)` but energy is `k * (phi - c)^2`. Consistent, but double-check scaling versus the density used in the kinetic term.
 - **Initial amplitude**: `rng.normal(scale=0.05)` may still be too large given the very soft quadratic potential (`0.05`). Consider smaller initialization after verifying PDE math.
 - **Gate/Controller**: disabled in the conservative loop, so they aren’t producing drift—but when re-enabled they’ll add new feedback paths to audit.
 

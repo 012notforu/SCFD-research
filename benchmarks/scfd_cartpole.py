@@ -236,7 +236,13 @@ class SCFDCartPoleController:
             "action_last": self.last_action,
         }
 
-    def generate_visualization(self, steps: int = 800, out_dir: str | Path = "scfd_viz", save_video: bool = True) -> Dict[str, object]:
+    def generate_visualization(
+        self,
+        steps: int = 800,
+        out_dir: str | Path = "scfd_viz",
+        save_video: bool = True,
+        video_format: str = "auto",
+    ) -> Dict[str, object]:
         out_path = Path(out_dir)
         out_path.mkdir(parents=True, exist_ok=True)
         self.reset()
@@ -274,6 +280,9 @@ class SCFDCartPoleController:
         np.savez_compressed(out_path / "scfd_rollout.npz", field=fields, env=env_hist, action=action_hist, energy=energy_hist)
         video_path: Path | None = None
         if save_video and frame_count > 1:
+            format_key = video_format.lower()
+            if format_key not in {"auto", "mp4", "gif"}:
+                raise ValueError(f"Unsupported video_format '{video_format}' (expected auto/mp4/gif)")
             v = float(np.max(np.abs(fields))) or 1.0
             fig, (ax_field, ax_cart) = plt.subplots(1, 2, figsize=(10, 4))
             im = ax_field.imshow(fields[0], cmap="coolwarm", vmin=-v, vmax=v, animated=True)
@@ -314,12 +323,28 @@ class SCFDCartPoleController:
                 interval=self.physics.dt * 1000.0,
                 blit=True,
             )
-            video_path = out_path / "scfd_cartpole.mp4"
-            try:
-                anim.save(video_path, writer="ffmpeg", fps=max(int(1 / self.physics.dt), 10))
-            except Exception:
-                video_path = video_path.with_suffix(".gif")
-                anim.save(video_path, writer="pillow", fps=max(int(1 / self.physics.dt), 10))
+            format_order: list[tuple[str, str]]
+            if format_key == "mp4":
+                format_order = [("mp4", "ffmpeg")]
+            elif format_key == "gif":
+                format_order = [("gif", "pillow")]
+            else:
+                format_order = [("mp4", "ffmpeg"), ("gif", "pillow")]
+            for suffix, writer_name in format_order:
+                candidate = out_path / f"scfd_cartpole.{suffix}"
+                try:
+                    anim.save(candidate, writer=writer_name, fps=max(int(1 / self.physics.dt), 10))
+                    video_path = candidate
+                    break
+                except Exception:
+                    video_path = None
+            if video_path is None:
+                fallback = out_path / "scfd_cartpole.gif"
+                try:
+                    anim.save(fallback, writer="pillow", fps=max(int(1 / self.physics.dt), 10))
+                    video_path = fallback
+                except Exception:
+                    video_path = None
             plt.close(fig)
         return {
             "frames": frame_count,
