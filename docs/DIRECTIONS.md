@@ -27,9 +27,13 @@ pytest tests/test_heat_front.py tests/test_heat_param_id.py
 ```
 
 ## 4. CMA Search Workflows
-Each benchmark has a CMA-ES driver (see `run/train_cma_*.py`). Example (heat routing):
+Each benchmark has a CMA-ES driver (see `run/train_cma_*.py`). Examples:
 ```bash
+# Heat routing
 python -m run.train_cma_heat_routing   --generations 30 --population 10 --elite 3   --steps 1200 --record-interval 120 --outdir runs/heat_routing_cma
+
+# Cart-pole (SCFD controller)
+python -m run.train_cma_scfd --generations 40 --population 12 --elite 4 --episodes 4 --steps 5000 --seed 3 --outdir runs/cartpole_cma
 ```
 Outputs:
 - `runs/<tag>/best_vector.json`: controller vector + rich metadata.
@@ -40,8 +44,10 @@ Outputs:
 Use the paired `run/run_*.py` scripts:
 ```bash
 python run/run_heat_routing.py   --vector runs/heat_routing_cma/best_vector.json   --outdir outputs/heat_routing_demo
+
+python -m benchmarks.run_cartpole --controller scfd --vector runs/cartpole_cma/best_vector.json --steps 5000 --episodes 10 --viz scfd --video-format gif --outdir cartpole_outputs
 ```
-Override metadata with CLI flags (e.g., `--initial-centers`, `--front-radius`).
+Override metadata with CLI flags (e.g., `--initial-centers`, `--front-radius`, or cart-pole weights via `--scfd-weights`).
 
 ## 6. Robustness Battery
 Evaluate perturbations across domains:

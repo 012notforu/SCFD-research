@@ -1,11 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import csv
 import json
 from dataclasses import replace
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 
@@ -67,11 +67,79 @@ def _config_from_vector(base: SCFDControllerConfig, vector: np.ndarray) -> SCFDC
     )
 
 
+def _metadata_from_config(
+    cfg: SCFDControllerConfig,
+    *,
+    mass_override: Optional[Tuple[Optional[float], Optional[float]]] = None,
+    training: Optional[Dict[str, object]] = None,
+) -> Dict[str, object]:
+    controller = {
+        "scfd_cfg_path": cfg.scfd_cfg_path,
+        "micro_steps": int(cfg.micro_steps),
+        "micro_steps_calm": int(cfg.micro_steps_calm),
+        "encode_gain": float(cfg.encode_gain),
+        "encode_width": int(cfg.encode_width),
+        "decay": float(cfg.decay),
+        "smooth_lambda": float(cfg.smooth_lambda),
+        "deadzone_angle": float(cfg.deadzone_angle),
+        "deadzone_ang_vel": float(cfg.deadzone_ang_vel),
+        "action_clip": float(cfg.action_clip),
+        "action_delta_clip": float(cfg.action_delta_clip),
+        "reset_noise": np.asarray(cfg.reset_noise, dtype=np.float32).tolist(),
+        "feature_momentum": float(cfg.feature_momentum),
+        "deadzone_feature_scale": np.asarray(cfg.deadzone_feature_scale, dtype=np.float32).tolist(),
+        "policy_weights": np.asarray(cfg.policy_weights, dtype=np.float32).tolist(),
+        "policy_bias": float(cfg.policy_bias),
+        "blend_linear_weight": float(cfg.blend_linear_weight),
+        "blend_ternary_weight": float(cfg.blend_ternary_weight),
+        "ternary_force_scale": float(cfg.ternary_force_scale),
+        "ternary_smooth_lambda": float(cfg.ternary_smooth_lambda),
+    }
+    for _extra in (
+        ("gain_energy", getattr(cfg, "gain_energy", None)),
+        ("gain_angle", getattr(cfg, "gain_angle", None)),
+        ("gain_ang_vel", getattr(cfg, "gain_ang_vel", None)),
+    ):
+        name, value = _extra
+        if value is not None:
+            controller[name] = float(value)
+    metadata: Dict[str, object] = {
+        "task": "cartpole_balance",
+        "controller_config": controller,
+    }
+    if mass_override is not None and any(x is not None for x in mass_override):
+        metadata["physics_override"] = {
+            "masscart": float(mass_override[0]) if mass_override[0] is not None else None,
+            "masspole": float(mass_override[1]) if mass_override[1] is not None else None,
+        }
+    if training:
+        metadata["training"] = training
+    return metadata
+
+
+def _config_from_metadata(data: Dict[str, object]) -> SCFDControllerConfig:
+    kwargs = dict(data)
+    extras = {}
+    for key in ("gain_energy", "gain_angle", "gain_ang_vel"):
+        if key in kwargs:
+            extras[key] = kwargs.pop(key)
+    if "policy_weights" in kwargs:
+        kwargs["policy_weights"] = np.asarray(kwargs["policy_weights"], dtype=np.float32)
+    if "reset_noise" in kwargs:
+        kwargs["reset_noise"] = np.asarray(kwargs["reset_noise"], dtype=np.float32)
+    if "deadzone_feature_scale" in kwargs:
+        kwargs["deadzone_feature_scale"] = np.asarray(kwargs["deadzone_feature_scale"], dtype=np.float32)
+    cfg = SCFDControllerConfig(**kwargs)
+    for key, value in extras.items():
+        setattr(cfg, key, float(value))
+    return cfg
+
+
 def _evaluate(
     cfg: SCFDControllerConfig,
     seeds: Iterable[int],
     steps: int,
-    mass_override: tuple[float, float] | None = None,
+    mass_override: Optional[Tuple[Optional[float], Optional[float]]] = None,
 ) -> Tuple[float, Dict[str, float]]:
     rewards: List[float] = []
     for seed in seeds:
@@ -136,12 +204,34 @@ def _append_history(
         )
 
 
-def _save_vector(path: Path, vector: np.ndarray, metrics: Dict[str, float]) -> None:
-    data = {
+def _save_vector(
+    path: Path,
+    vector: np.ndarray,
+    metrics: Dict[str, float],
+    metadata: Optional[Dict[str, object]] = None,
+) -> None:
+    payload: Dict[str, object] = {
         "vector": vector.tolist(),
         "metrics": metrics,
     }
-    path.write_text(json.dumps(data, indent=2))
+    if metadata:
+        payload.update(metadata)
+    path.write_text(json.dumps(payload, indent=2))
+
+
+def _training_metadata(args: argparse.Namespace, seeds: Iterable[int]) -> Dict[str, object]:
+    seed_list = [int(s) for s in np.asarray(list(seeds), dtype=np.uint64)]
+    return {
+        "episodes": int(args.episodes),
+        "steps": int(args.steps),
+        "generations": int(args.generations),
+        "population": int(args.population),
+        "elite": int(args.elite),
+        "sigma_start": float(args.sigma),
+        "sigma_decay": float(args.sigma_decay),
+        "seed": int(args.seed),
+        "evaluation_seeds": seed_list,
+    }
 
 
 def _parse_args() -> argparse.Namespace:
@@ -156,8 +246,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--masscart", type=float, default=None, help="Override masscart if provided")
     parser.add_argument("--masspole", type=float, default=None, help="Override masspole if provided")
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--outdir", type=str, default="runs/scfd_cma")
+    parser.add_argument("--outdir", type=str, default="runs/cartpole_cma")
     parser.add_argument("--scfd-cfg", type=str, default="cfg/defaults.yaml", help="SCFD YAML config (for future use)")
+    parser.add_argument("--viz-steps", type=int, default=1200, help="Frames used to generate the best-artifact rollout")
     return parser.parse_args()
 
 
@@ -165,7 +256,7 @@ def main() -> None:
     args = _parse_args()
     if args.elite <= 0 or args.elite > args.population:
         raise ValueError("elite must be in [1, population]")
-    mass_override = (args.masscart, args.masspole)
+    mass_override: Tuple[Optional[float], Optional[float]] = (args.masscart, args.masspole)
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     history_path = outdir / "history.csv"
@@ -181,35 +272,41 @@ def main() -> None:
     best_score = -np.inf
     best_vector = mean.copy()
     best_metrics: Dict[str, float] = {}
+    best_cfg = base_cfg
 
     dim = mean.size
-    for gen in range(args.generations):
-        candidates: List[Tuple[float, np.ndarray, Dict[str, float]]] = []
+    training_meta = _training_metadata(args, seeds)
 
-        # Evaluate current mean first
+    for gen in range(args.generations):
+        candidates: List[Tuple[float, np.ndarray, Dict[str, float], SCFDControllerConfig]] = []
+
         cfg = _config_from_vector(base_cfg, mean)
         score, metrics = _evaluate(cfg, seeds, args.steps, mass_override=mass_override)
-        candidates.append((score, mean.copy(), metrics))
+        candidates.append((score, mean.copy(), metrics, cfg))
         _append_history(history_path, gen, 0, score, metrics, score > best_score)
 
         for cand_idx in range(1, args.population):
             sample = mean + sigma * rng.normal(size=dim)
             cfg = _config_from_vector(base_cfg, sample)
             score, metrics = _evaluate(cfg, seeds, args.steps, mass_override=mass_override)
-            candidates.append((score, sample, metrics))
+            candidates.append((score, sample, metrics, cfg))
             _append_history(history_path, gen, cand_idx, score, metrics, score > best_score)
 
         candidates.sort(key=lambda item: item[0], reverse=True)
         elites = candidates[: args.elite]
 
-        elite_vectors = np.stack([vec for _, vec, _ in elites], axis=0)
+        elite_vectors = np.stack([vec for _, vec, _, _ in elites], axis=0)
         mean = elite_vectors.mean(axis=0)
-        # project mean back into feasible range
-        mean = _vector_from_config(_config_from_vector(base_cfg, mean))[...,]
+        mean = _vector_from_config(_config_from_vector(base_cfg, mean))
 
         if elites[0][0] > best_score:
-            best_score, best_vector, best_metrics = elites[0]
-            _save_vector(outdir / "best_vector.json", best_vector, best_metrics)
+            top_score, top_vector, top_metrics, top_cfg = elites[0]
+            best_score = float(top_score)
+            best_vector = top_vector.copy()
+            best_metrics = dict(top_metrics)
+            best_cfg = top_cfg
+            metadata = _metadata_from_config(best_cfg, mass_override=mass_override, training=training_meta)
+            _save_vector(outdir / "best_vector.json", best_vector, best_metrics, metadata=metadata)
 
         sigma *= args.sigma_decay
         print(
@@ -217,10 +314,24 @@ def main() -> None:
             flush=True,
         )
 
-    # Final evaluation on best vector for record
-    final_cfg = _config_from_vector(base_cfg, best_vector)
+    final_cfg = best_cfg
     final_score, final_metrics = _evaluate(final_cfg, seeds, args.steps, mass_override=mass_override)
-    _save_vector(outdir / "best_vector.json", best_vector, final_metrics)
+    metadata = _metadata_from_config(final_cfg, mass_override=mass_override, training=training_meta)
+    _save_vector(outdir / "best_vector.json", best_vector, final_metrics, metadata=metadata)
+
+    artifact_dir = outdir / "best_artifact"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    controller = SCFDCartPoleController(final_cfg, rng=np.random.default_rng(args.seed))
+    vis = controller.generate_visualization(
+        steps=min(args.viz_steps, args.steps),
+        out_dir=artifact_dir,
+        save_video=False,
+        video_format="gif",
+    )
+    np.save(artifact_dir / "metrics.npy", np.array([final_metrics], dtype=object))
+    with (artifact_dir / "metadata.json").open("w") as fh:
+        json.dump({"training": training_meta, "visualization": vis}, fh, indent=2)
+
     print("Training complete. Best mean steps:", final_score)
 
 

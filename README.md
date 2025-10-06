@@ -7,42 +7,82 @@ Symbolic Coherent Field Dynamics (SCFD) is a variational physics engine for spat
 ## Mathematical Overview
 
 ### SCFD Coherence Energy
+
 - State \(u(x, t)\) evolves under a coherence functional \(\mathcal{E}[u]\) that penalises flat spectra and encourages near-critical behaviour.
+
 - The Hamiltonian is discretised with symplectic leapfrog integration. Each step preserves the inverse-gradient penalty and quenched heterogeneity by applying
+
   \[
+
   u_{t+1} = u_t + \Delta t \; \mathcal{J}^{-1} \nabla \mathcal{E}[u_t]
+
   \]
-  \]
+
   where \(\mathcal{J}\) is the skew-symmetric symplectic form.
+
 - Controllers act only through local parameters (temperature `T`, gate `alpha`, coherence gain `gamma`) and are constrained by EMA filters and magnitude clips so the energy landscape stays coherent.
 
 ### Emergent Models (EM) Baseline
+
 - EM provides a convolutional CA (Lenia-style) with encode-evolve-decode loops.
+
 - Both EM and SCFD expose identical observation stacks, so learned policies can transfer and we can measure expressiveness gaps.
+
 - The orchestrator can probe an environment and decide whether to deploy an SCFD or EM vector based on metadata (physics tags, objective, transform cycles).
 
 ### Hybrid Controllers and CMA Vectors
+
 - Controllers maintain hidden encoders (`theta`) that filter observations, then emit local field perturbations respecting SCFD guardrails.
+
 - CMA-ES optimises the controller hyper-vector (encode/decay rates, gains, budget clips, environment parameters). All search scripts now persist rich metadata so downstream tools reconstruct the exact simulation regime.
+
 - Meta-learning runs sweep across the archive (`runs/*/best_vector.json`), sampling tasks for adaptation experiments.
 
 ## System Architecture
 
 - `engine/` : SCFD core: energy densities, symplectic integrators, heterogeneity scheduler.
+
 - `em_baseline/` : Reference EM implementation for apples-to-apples comparisons.
+
 - `benchmarks/` : Domain-specific simulators (heat diffusion ARC, routing, fronts, parameter ID, Gray-Scott, flow control, wave shaping, cart-pole, etc.).
+
 - `run/` : Command-line entry points for CMA training, evaluation runs, robustness batteries, latency profiling.
+
 - `orchestrator/` : Environment sensing + vector planning utilities.
+
 - `tests/` : Pytest suite covering simulators, CMA helpers, orchestrator logic, and regression smoke tests.
 
 ## Spatial Control Benchmarks
 
 Latest additions (all with metadata-rich vectors):
+
 - **Heat Routing**: multiple blob transport with collision penalties (`runs/heat_routing_cma`).
+
 - **Heat Front Tracking**: curvature-bounded propagation (`runs/heat_front_cma`).
+
 - **Heat Parameter ID**: hidden diffusivity map reconstruction (`runs/heat_param_id_cma`).
+
 - **Heat ARC Transforms**: rotate/reflect motif pursuit (`runs/heat_arc_cma`).
+
 - Full robustness battery scaffolding lives in `run/robustness_battery.py` and persists cross-domain summaries (`runs/robustness_sample.json`).
+
+## Cart-pole Vectors
+
+- Optimise the blended SCFD controller with CMA-ES:
+
+  ```powershell
+
+  python -m run.train_cma_scfd --generations 40 --population 12 --elite 4 --episodes 4 --steps 5000 --seed 3 --outdir runs/cartpole_cma
+
+  ```
+
+- Replay a tuned controller (supports metadata overrides):
+
+  ```powershell
+
+  python -m benchmarks.run_cartpole --controller scfd --vector runs/cartpole_cma/best_vector.json --steps 5000 --episodes 10 --viz scfd --video-format gif --outdir cartpole_outputs
+
+  ```
 
 ## Media
 
@@ -59,15 +99,25 @@ Field raster from the same run:
 Run the SCFD cart-pole demo to refresh the assets before committing media updates:
 
 ```powershell
+
 python -m benchmarks.run_cartpole \
+
   --controller scfd \
+
   --viz scfd \
+
   --viz-steps 1600 \
+
   --steps 20000 \
+
   --episodes 5 \
+
   --scfd-seed 7 \
+
   --video-format gif \
+
   --outdir cartpole_outputs
+
 ```
 
 The command writes new media to `cartpole_outputs/scfd/`. Copy `scfd_cartpole.gif`, `scfd_field_raster.png`, and `scfd_rollout.npz` into `cartpole_demo/scfd/` once you are happy with the run.
@@ -75,6 +125,7 @@ The command writes new media to `cartpole_outputs/scfd/`. Copy `scfd_cartpole.gi
 ## Licensing
 
 - **Primary**: [GNU AGPL-3.0](LICENSE)
+
 - **Secondary**: [Commercial license](LICENSE-COMMERCIAL.md) available for proprietary deployments. Contact 012notforu@pm.me.
 
 Using SCFD Research under AGPL-3.0 ensures reciprocal openness: hosting the engine as a service requires publishing your modifications. Commercial partners can keep changes private under a paid agreement.
@@ -82,9 +133,13 @@ Using SCFD Research under AGPL-3.0 ensures reciprocal openness: hosting the engi
 ## Getting Started
 
 Installation, environment preparation, dataset downloads, and reproduction commands live in [`docs/DIRECTIONS.md`](docs/DIRECTIONS.md). That guide covers:
+
 - Python environment setup (`.venv`, extras, GPU hints).
+
 - Running CMA searches with full budgets.
+
 - Executing robustness batteries and latency profilers.
+
 - Exporting controllers for external orchestrators.
 
 For research questions or licensing inquiries, open an issue or reach out to 012notforu@pm.me.

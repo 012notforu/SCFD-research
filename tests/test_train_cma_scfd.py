@@ -1,7 +1,13 @@
 ﻿import numpy as np
 
 from benchmarks.scfd_cartpole import SCFDControllerConfig
-from run.train_cma_scfd import _config_from_vector, _evaluate, _vector_from_config
+from run.train_cma_scfd import (
+    _config_from_metadata,
+    _config_from_vector,
+    _evaluate,
+    _metadata_from_config,
+    _vector_from_config,
+)
 
 
 def test_vector_roundtrip():
@@ -28,3 +34,13 @@ def test_evaluate_runs_quick():
     score, metrics = _evaluate(base, seeds, steps=200)
     assert np.isfinite(score)
     assert metrics["mean_steps"] >= 0
+
+
+def test_metadata_roundtrip() -> None:
+    base = SCFDControllerConfig()
+    metadata = _metadata_from_config(base)
+    rebuilt = _config_from_metadata(metadata["controller_config"])
+    np.testing.assert_allclose(base.policy_weights, rebuilt.policy_weights)
+    assert rebuilt.micro_steps == base.micro_steps
+    assert rebuilt.micro_steps_calm == base.micro_steps_calm
+

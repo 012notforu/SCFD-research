@@ -281,6 +281,14 @@ def load_vector_registry(runs_root: Path | str = "runs") -> List[VectorEntry]:
             metadata["alpha_high"] = float(payload["alpha_high"])
         if "split_axis" in payload:
             metadata["split_axis"] = str(payload["split_axis"])
+        if "controller_config" in payload:
+            metadata["controller_config"] = payload["controller_config"]
+        if "training" in payload:
+            metadata["training"] = payload["training"]
+        if "physics_override" in payload:
+            metadata["physics_override"] = payload["physics_override"]
+        if "task" in payload:
+            metadata["task"] = payload["task"]
         tags = tuple(sorted({physics, objective}))
         entries.append(
             VectorEntry(
@@ -319,6 +327,8 @@ def _infer_vector_metadata(vector_id: str) -> Tuple[str, str]:
         return "flow", vector_id
     if name.startswith("wave"):
         return "wave", vector_id
+    if "cartpole" in name:
+        return "cartpole", "balance"
     return "unknown", vector_id
 
 

@@ -177,3 +177,45 @@ def test_plan_for_environment_hot_corner_prefers_matching_vector() -> None:
 
     plan = plan_for_environment(factory, registry=[gradient_entry, hot_entry], steps=20, record_interval=5)
     assert plan.steps[0].vector.vector_id == "heat_diffusion_cma_hotcorner"
+
+def test_load_vector_registry_cartpole_metadata(tmp_path: Path) -> None:
+    runs = tmp_path / "runs"
+    cart_dir = runs / "cartpole_cma"
+    cart_dir.mkdir(parents=True)
+    payload = {
+        "vector": [0.0],
+        "metrics": {"mean_steps": 4000.0},
+        "controller_config": {
+            "scfd_cfg_path": "cfg/defaults.yaml",
+            "micro_steps": 40,
+            "micro_steps_calm": 16,
+            "encode_gain": 0.05,
+            "encode_width": 3,
+            "decay": 0.98,
+            "smooth_lambda": 0.25,
+            "deadzone_angle": 0.01,
+            "deadzone_ang_vel": 0.1,
+            "action_clip": 10.0,
+            "action_delta_clip": 2.0,
+            "reset_noise": [0.05, 0.05, 0.02, 0.05],
+            "feature_momentum": 0.05,
+            "deadzone_feature_scale": [0.2, 0.2, 0.2, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5],
+            "policy_weights": [4.0, 1.5, 0.8, 0.0, 6.0, 2.0, 0.5, 0.2, -0.1, 0.0],
+            "policy_bias": 0.0,
+            "blend_linear_weight": 1.0,
+            "blend_ternary_weight": 0.5,
+            "ternary_force_scale": 7.5,
+            "ternary_smooth_lambda": 1.0
+        },
+        "training": {"episodes": 3, "steps": 2500},
+        "task": "cartpole_balance"
+    }
+    (cart_dir / "best_vector.json").write_text(json.dumps(payload))
+
+    entries = load_vector_registry(runs)
+    entry = next(e for e in entries if e.vector_id == "cartpole_cma")
+    assert entry.physics == "cartpole"
+    assert entry.objective == "balance"
+    controller_meta = entry.metadata.get("controller_config", {})
+    assert controller_meta.get("micro_steps") == 40
+    assert entry.metadata.get("task") == "cartpole_balance"
