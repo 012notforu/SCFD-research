@@ -128,7 +128,9 @@ The command writes new media to `cartpole_outputs/scfd/`. Copy `scfd_cartpole.gi
 
 - **Secondary**: [Commercial license](LICENSE-COMMERCIAL.md) available for proprietary deployments. Contact 012notforu@pm.me.
 
-Using SCFD Research under AGPL-3.0 ensures reciprocal openness: hosting the engine as a service requires publishing your modifications. Commercial partners can keep changes private under a paid agreement.
+Using SCFD Research under AGPL-3.0 ensures reciprocal openness: hosting the engine as a service requires publishing your modifications. Commercial partners can keep changes private under a paid agreement.
+
+**Generated Content**: Trained vectors (`.json` files) and media artifacts produced by this software inherit the repository license (AGPL-3.0) by default. For commercial licensing of generated vectors, contact 012notforu@pm.me.
 
 ## Getting Started
 
